@@ -15,14 +15,18 @@
   "dependencies": {},
   "pebble": {
     "displayName": "Agent Approvals",
-    "uuid": "4c1d6837-1234-4a25-9c88-75c123456789",
+    "uuid": "f88fb1ff-02bf-48f8-819e-e6832cf137a9",
     "sdkVersion": "3",
+    "watchapp": {
+      "watchface": false
+    },
     "enableMultiJS": true,
     "targetPlatforms": [
       "basalt",
       "emery",
       "chalk",
-      "diorite"
+      "diorite",
+      "aplite"
     ],
     "capabilities": [
       "configurable"
@@ -35,11 +39,6 @@
     ],
     "resources": {
       "media": [
-        {
-          "type": "png",
-          "name": "IMAGE_ANTIGRAVITY_LOGO",
-          "file": "images/antigravity_logo_watch.png"
-        },
         {
           "type": "png",
           "name": "IMAGE_APP_ICON",

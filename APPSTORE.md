@@ -6,31 +6,33 @@ Use the following metadata and image assets when submitting **Agent Approvals** 
 
 ## 🏷️ Basic Metadata
 
-* **App Title**: `Agent Approvals (Antigravity)`
+* **App Title**: `Agent Approvals`
+* **App UUID**: `f88fb1ff-02bf-48f8-819e-e6832cf137a9`
+* **App Type**: `Watchapp`
+* **Has Settings / Configurable**: `Yes (Checked)`
 * **Developer Name**: `Lee Boonstra (@savelee)`
 * **Category**: `Tools & Utilities` / `Daily`
 * **Version**: `1.1.0`
-* **Compatibility**: Pebble Time 2, Pebble Time, Pebble Time Steel, Pebble Time Round, Pebble 2 (`emery`, `basalt`, `chalk`, `diorite`, `aplite`, `flint`, `gabbro`)
+* **Target Platforms**: `emery`, `basalt`, `chalk`, `diorite`, `aplite`
 * **Source Code & Listener Download**: [https://github.com/savelee/pebble_coding_agent_approval](https://github.com/savelee/pebble_coding_agent_approval)
 
 ---
 
 ## 🖼️ Store Image Assets by Platform (in `/store_assets`)
 
-Upload the corresponding image files under each platform tab in the Rebble Developer Portal:
+Upload the corresponding image files to the Rebble Developer Portal:
 
-| Platform / Slot | File Path | Exact Dimensions | Display Style |
-| :--- | :--- | :---: | :--- |
-| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Official Antigravity full-color logo banner with app copy |
-| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | Antigravity full-color icon with green approve checkmark |
-| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | Antigravity full-color icon with green approve checkmark |
-| **Emery** *(Pebble Time 2)* | `store_assets/screenshot_emery_200x228.png` | **200 × 228 px** | Color 64-color split screen |
-| **Aplite** *(Pebble Classic)* | `store_assets/screenshot_aplite_144x168.png` | **144 × 168 px** | Monochrome 1-bit high-contrast split screen |
-| **Basalt** *(Pebble Time)* | `store_assets/screenshot_basalt_144x168.png` | **144 × 168 px** | Color 64-color split screen |
-| **Chalk** *(Time Round)* | `store_assets/screenshot_chalk_180x180.png` | **180 × 180 px** | Circular round watch face with transparent corners |
-| **Diorite** *(Pebble 2)* | `store_assets/screenshot_diorite_144x168.png` | **144 × 168 px** | Monochrome 1-bit split screen |
-| **Flint** *(Color Prototype)* | `store_assets/screenshot_flint_144x168.png` | **144 × 168 px** | Color split screen |
-| **Gabbro** *(High-Res)* | `store_assets/screenshot_gabbro_260x260.png` | **260 × 260 px** | High-res color split screen |
+| Platform / Slot | File Path | Exact Dimensions | Format |
+| :--- | :--- | :---: | :---: |
+| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Standard RGB PNG |
+| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | RGBA PNG |
+| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | RGBA PNG |
+| **Emery** *(Pebble Time 2)* | `store_assets/screenshot_emery_200x228.png` | **200 × 228 px** | RGB PNG |
+| **Emery Splash** *(PT2)* | `store_assets/screenshot_emery_splash_200x228.png` | **200 × 228 px** | RGB PNG |
+| **Basalt** *(Pebble Time)* | `store_assets/screenshot_basalt_144x168.png` | **144 × 168 px** | RGB PNG |
+| **Chalk** *(Time Round)* | `store_assets/screenshot_chalk_180x180.png` | **180 × 180 px** | RGBA Round PNG |
+| **Diorite** *(Pebble 2)* | `store_assets/screenshot_diorite_144x168.png` | **144 × 168 px** | RGB PNG |
+| **Aplite** *(Classic/Steel)* | `store_assets/screenshot_aplite_144x168.png` | **144 × 168 px** | RGB PNG |
 
 ---
 
