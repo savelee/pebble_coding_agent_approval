@@ -37,6 +37,11 @@
       "media": [
         {
           "type": "png",
+          "name": "IMAGE_ANTIGRAVITY_LOGO",
+          "file": "images/antigravity_logo_watch.png"
+        },
+        {
+          "type": "png",
           "name": "IMAGE_APP_ICON",
           "file": "images/app_icon.png",
           "menuIcon": true

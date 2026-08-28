@@ -20,6 +20,7 @@
 
 static Window *s_splash_window;
 static Layer *s_splash_canvas;
+static GBitmap *s_logo_bitmap = NULL;
 static AppTimer *s_splash_timer = NULL;
 
 static void transition_to_main(void *data) {
@@ -56,60 +57,26 @@ static void splash_canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(
       ctx,
-      "AGENT APPROVALS",
+      "ANTIGRAVITY",
       fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
       GRect(0, 4, bounds.size.w, 20),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
 
-  // 3. Miniature Watch Layout Preview Box (Center Graphic)
-  int card_w = 64;
-  int card_h = 74;
-  int card_x = (bounds.size.w - card_w) / 2;
-  int card_y = 26;
+  // 3. Official Antigravity Logo Bitmap
+  int logo_size = 60;
+  int logo_x = (bounds.size.w - logo_size) / 2;
+  int logo_y = 26;
 
-  // Outer bezel frame
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, GRect(card_x - 3, card_y - 3, card_w + 6, card_h + 6), 4, GCornersAll);
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_stroke_width(ctx, 1);
-  graphics_draw_round_rect(ctx, GRect(card_x - 3, card_y - 3, card_w + 6, card_h + 6), 4);
-
-  // Top half of mini preview (Green with Checkmark)
-  int mini_half_h = card_h / 2;
-  graphics_context_set_fill_color(ctx, GColorKellyGreen);
-  graphics_fill_rect(ctx, GRect(card_x, card_y, card_w, mini_half_h), 0, GCornerNone);
-
-  int mini_top_cx = card_x + card_w / 2;
-  int mini_top_cy = card_y + mini_half_h / 2;
-  graphics_context_set_fill_color(ctx, GColorIslamicGreen);
-  graphics_fill_circle(ctx, GPoint(mini_top_cx, mini_top_cy), 11);
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_stroke_width(ctx, 1);
-  graphics_draw_circle(ctx, GPoint(mini_top_cx, mini_top_cy), 11);
-  // Checkmark lines
-  graphics_draw_line(ctx, GPoint(mini_top_cx - 5, mini_top_cy), GPoint(mini_top_cx - 2, mini_top_cy + 4));
-  graphics_draw_line(ctx, GPoint(mini_top_cx - 2, mini_top_cy + 4), GPoint(mini_top_cx + 5, mini_top_cy - 3));
-
-  // Bottom half of mini preview (Red with Cross)
-  graphics_context_set_fill_color(ctx, GColorRed);
-  graphics_fill_rect(ctx, GRect(card_x, card_y + mini_half_h, card_w, mini_half_h), 0, GCornerNone);
-
-  int mini_bot_cx = card_x + card_w / 2;
-  int mini_bot_cy = card_y + mini_half_h + mini_half_h / 2;
-  graphics_context_set_fill_color(ctx, GColorDarkCandyAppleRed);
-  graphics_fill_circle(ctx, GPoint(mini_bot_cx, mini_bot_cy), 11);
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_stroke_width(ctx, 1);
-  graphics_draw_circle(ctx, GPoint(mini_bot_cx, mini_bot_cy), 11);
-  // Cross lines
-  graphics_draw_line(ctx, GPoint(mini_bot_cx - 4, mini_bot_cy - 4), GPoint(mini_bot_cx + 4, mini_bot_cy + 4));
-  graphics_draw_line(ctx, GPoint(mini_bot_cx - 4, mini_bot_cy + 4), GPoint(mini_bot_cx + 4, mini_bot_cy - 4));
-
-  // Divider line
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_draw_line(ctx, GPoint(card_x, card_y + mini_half_h), GPoint(card_x + card_w, card_y + mini_half_h));
+  if (s_logo_bitmap) {
+    graphics_context_set_compositing_mode(ctx, GCompOpSet);
+    graphics_draw_bitmap_in_rect(ctx, s_logo_bitmap, GRect(logo_x, logo_y, logo_size, logo_size));
+  } else {
+    // Fallback circle if bitmap not yet loaded
+    graphics_context_set_fill_color(ctx, GColorKellyGreen);
+    graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, logo_y + logo_size / 2), 24);
+  }
 
   // 4. Detailed Explanation Text
   graphics_context_set_text_color(ctx, GColorWhite);
@@ -117,7 +84,7 @@ static void splash_canvas_update_proc(Layer *layer, GContext *ctx) {
       ctx,
       "Approve your coding agent (like Antigravity) from your wrist, with the Pebble Time 2 app (and web extension).",
       fonts_get_system_font(FONT_KEY_GOTHIC_14),
-      GRect(6, card_y + card_h + 4, bounds.size.w - 12, 54),
+      GRect(6, logo_y + logo_size + 4, bounds.size.w - 12, 54),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
@@ -138,6 +105,10 @@ static void splash_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
+#if defined(RESOURCE_ID_IMAGE_ANTIGRAVITY_LOGO)
+  s_logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_ANTIGRAVITY_LOGO);
+#endif
+
   s_splash_canvas = layer_create(bounds);
   layer_set_update_proc(s_splash_canvas, splash_canvas_update_proc);
   layer_add_child(window_layer, s_splash_canvas);
@@ -150,6 +121,10 @@ static void splash_window_unload(Window *window) {
   if (s_splash_timer) {
     app_timer_cancel(s_splash_timer);
     s_splash_timer = NULL;
+  }
+  if (s_logo_bitmap) {
+    gbitmap_destroy(s_logo_bitmap);
+    s_logo_bitmap = NULL;
   }
   layer_destroy(s_splash_canvas);
 }
