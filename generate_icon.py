@@ -12,90 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Generate a 28x28 menu icon PNG for Pebble application."""
+"""Generate exact 25x25 menu icon for Pebble OS compatibility."""
 
 import os
-import struct
-import zlib
+from PIL import Image, ImageDraw
 
 
-def create_app_icon_png(target_path: str) -> None:
-    width = 28
-    height = 28
+def create_25x25_menu_icon(official_logo_path: str = "/tmp/antigravity_official.png", target_path: str = "pebble_app/resources/images/app_icon.png"):
+    size = 25
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
 
-    # 28x28 RGBA image buffer
-    # Draw a rounded badge with green checkmark (top) and red cross (bottom)
-    pixels = bytearray(width * height * 4)
+    # 1. Dark squircle badge
+    draw.rounded_rectangle([0, 0, size - 1, size - 1], radius=5, fill=(11, 16, 33, 255), outline=(30, 41, 59, 255), width=1)
 
-    for y in range(height):
-        for x in range(width):
-            idx = (y * width + x) * 4
-            dx = x - 13.5
-            dy = y - 13.5
-            dist = (dx * dx + dy * dy) ** 0.5
+    # 2. Official logo if available
+    if os.path.exists(official_logo_path):
+        logo = Image.open(official_logo_path).convert("RGBA")
+        logo_resized = logo.resize((18, 18), Image.Resampling.LANCZOS)
+        img.paste(logo_resized, (3, 3), logo_resized)
+    else:
+        # Fallback Antigravity cyber dot
+        draw.ellipse([5, 5, 19, 19], fill=(0, 240, 255, 255))
 
-            if dist > 13.5:
-                # Transparent outside circle
-                pixels[idx:idx + 4] = b"\x00\x00\x00\x00"
-            elif dist > 12.0:
-                # Border
-                pixels[idx:idx + 4] = b"\x0b\x1a\x30\xff"  # Dark navy
-            elif y < 14:
-                # Top half: Kelly green
-                # Draw checkmark in white
-                is_check = (
-                    (x == 8 and y == 7) or
-                    (x == 9 and y == 8) or
-                    (x == 10 and y == 9) or
-                    (x == 11 and y == 8) or
-                    (x == 12 and y == 7) or
-                    (x == 13 and y == 6) or
-                    (x == 14 and y == 5) or
-                    (x == 15 and y == 4)
-                )
-                if is_check:
-                    pixels[idx:idx + 4] = b"\xff\xff\xff\xff"
-                else:
-                    pixels[idx:idx + 4] = b"\x00\x87\x5a\xff"
-            else:
-                # Bottom half: Red
-                # Draw cross in white
-                is_cross = (
-                    (abs(x - 14) == abs(y - 20) and 9 <= x <= 19) or
-                    (abs(x - 14) == abs(20 - y) and 9 <= x <= 19)
-                )
-                if is_cross:
-                    pixels[idx:idx + 4] = b"\xff\xff\xff\xff"
-                else:
-                    pixels[idx:idx + 4] = b"\xd9\x38\x1e\xff"
-
-    # Encode raw scanlines for PNG (each line prefixed with filter byte 0)
-    raw_data = bytearray()
-    for y in range(height):
-        raw_data.append(0)  # Filter type None
-        raw_data.extend(pixels[y * width * 4:(y + 1) * width * 4])
-
-    def chunk(chunk_type: bytes, data: bytes) -> bytes:
-        length = struct.pack(">I", len(data))
-        crc = struct.pack(">I", zlib.crc32(chunk_type + data) & 0xffffffff)
-        return length + chunk_type + data + crc
-
-    # PNG Signature
-    png = b"\x89PNG\r\n\x1a\n"
-    # IHDR
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    png += chunk(b"IHDR", ihdr)
-    # IDAT
-    compressed = zlib.compress(bytes(raw_data), 9)
-    png += chunk(b"IDAT", compressed)
-    # IEND
-    png += chunk(b"IEND", b"")
+    # 3. Green checkmark approve badge in corner
+    badge_r = 5
+    bx, by = 18, 18
+    draw.ellipse([bx - badge_r, by - badge_r, bx + badge_r, by + badge_r], fill=(0, 230, 118, 255), outline=(255, 255, 255, 255), width=1)
+    draw.line([(bx - 2, by), (bx - 1, by + 2), (bx + 2, by - 2)], fill=(255, 255, 255, 255), width=1)
 
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
-    with open(target_path, "wb") as f:
-        f.write(png)
-    print(f"Generated {target_path} successfully.")
+    img.save(target_path, format="PNG", optimize=True)
+    print(f"✓ Saved {target_path} (exact size: {img.size[0]}x{img.size[1]} px)")
 
 
 if __name__ == "__main__":
-    create_app_icon_png("pebble_app/resources/images/app_icon.png")
+    create_25x25_menu_icon()
