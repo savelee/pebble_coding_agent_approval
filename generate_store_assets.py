@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Generate all submission image assets for Rebble App Store."""
+"""Generate high-polish Antigravity-branded Rebble App Store assets."""
 
 import math
 import os
 import struct
 import zlib
-from typing import List, Tuple
+from typing import Tuple
 
 
-class ImageBuffer:
-    """Simple RGBA image rasterizer without external dependencies."""
+class Canvas:
+    """High-quality 32-bit RGBA canvas with anti-aliasing and shape rendering."""
 
-    def __init__(self, width: int, height: int, bg_color: Tuple[int, int, int, int] = (0, 0, 0, 0)):
+    def __init__(self, width: int, height: int, bg_color: Tuple[int, int, int, int] = (11, 16, 33, 255)):
         self.width = width
         self.height = height
         self.pixels = bytearray(width * height * 4)
@@ -34,7 +34,6 @@ class ImageBuffer:
     def set_pixel(self, x: int, y: int, color: Tuple[int, int, int, int]):
         if 0 <= x < self.width and 0 <= y < self.height:
             idx = (y * self.width + x) * 4
-            # Alpha blending
             src_a = color[3] / 255.0
             if src_a == 1.0:
                 self.pixels[idx:idx + 4] = bytes(color)
@@ -53,8 +52,27 @@ class ImageBuffer:
                 self.pixels[idx + 3] = int(out_a * 255)
 
     def fill_rect(self, x: int, y: int, w: int, h: int, color: Tuple[int, int, int, int]):
-        for cy in range(y, min(y + h, self.height)):
-            for cx in range(x, min(x + w, self.width)):
+        for cy in range(max(0, y), min(y + h, self.height)):
+            for cx in range(max(0, x), min(x + w, self.width)):
+                self.set_pixel(cx, cy, color)
+
+    def fill_rounded_rect(self, x: int, y: int, w: int, h: int, r: int, color: Tuple[int, int, int, int]):
+        for cy in range(max(0, y), min(y + h, self.height)):
+            for cx in range(max(0, x), min(x + w, self.width)):
+                # Check corners
+                in_corner = False
+                if cx < x + r and cy < y + r:
+                    if (cx - (x + r)) ** 2 + (cy - (y + r)) ** 2 > r * r:
+                        continue
+                elif cx > x + w - r and cy < y + r:
+                    if (cx - (x + w - r)) ** 2 + (cy - (y + r)) ** 2 > r * r:
+                        continue
+                elif cx < x + r and cy > y + h - r:
+                    if (cx - (x + r)) ** 2 + (cy - (y + h - r)) ** 2 > r * r:
+                        continue
+                elif cx > x + w - r and cy > y + h - r:
+                    if (cx - (x + w - r)) ** 2 + (cy - (y + h - r)) ** 2 > r * r:
+                        continue
                 self.set_pixel(cx, cy, color)
 
     def fill_circle(self, cx: int, cy: int, radius: int, color: Tuple[int, int, int, int]):
@@ -79,7 +97,6 @@ class ImageBuffer:
         sx = 1 if x0 < x1 else -1
         sy = 1 if y0 < y1 else -1
         err = dx - dy
-
         while True:
             for tx in range(-thickness // 2, thickness // 2 + 1):
                 for ty in range(-thickness // 2, thickness // 2 + 1):
@@ -94,8 +111,7 @@ class ImageBuffer:
                 err += dx
                 y0 += sy
 
-    def draw_simple_text(self, text: str, x: int, y: int, color: Tuple[int, int, int, int], scale: int = 1):
-        """Simple 5x7 bitmap font renderer for clean labels."""
+    def draw_text(self, text: str, x: int, y: int, color: Tuple[int, int, int, int], scale: int = 1):
         font_map = {
             'A': ["01110", "10001", "11111", "10001", "10001"],
             'B': ["11110", "10001", "11110", "10001", "11110"],
@@ -153,7 +169,7 @@ class ImageBuffer:
                         self.fill_rect(cx + c * scale, y + r * scale, scale, scale, color)
             cx += (g_w + 1) * scale
 
-    def save_png(self, filepath: str):
+    def save(self, filepath: str):
         raw_data = bytearray()
         for y in range(self.height):
             raw_data.append(0)
@@ -174,233 +190,239 @@ class ImageBuffer:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "wb") as f:
             f.write(png)
-        print(f"Saved {filepath} ({self.width}x{self.height})")
+        print(f"Generated {filepath} ({self.width}x{self.height})")
 
 
-def generate_action_screen(width: int, height: int, status_text: str = "READY", status_color=(255, 215, 0, 255)) -> ImageBuffer:
-    img = ImageBuffer(width, height)
-    header_h = int(height * 0.1)
-    usable_h = height - header_h
-    half_h = usable_h // 2
-    top_y = header_h
-    bot_y = header_h + half_h
+def draw_antigravity_logo(canvas: Canvas, cx: int, cy: int, radius: int):
+    """Draw the futuristic glowing Antigravity Delta / Orbital Prism emblem."""
+    # Outer ambient glow
+    for dr in range(radius + 15, radius - 5, -2):
+        alpha = int(max(0, (radius + 15 - dr) * 4))
+        canvas.draw_circle(cx, cy, dr, (0, 240, 255, alpha), 2)
 
-    # Top Status Bar
-    img.fill_rect(0, 0, width, header_h, (0, 0, 0, 255))
-    scale = 2 if width >= 200 else 1
-    text_w = len(status_text) * (6 * scale)
-    img.draw_simple_text(status_text, (width - text_w) // 2, (header_h - 5 * scale) // 2, status_color, scale)
+    # 3-Axis Orbital Delta Prism Loops
+    # Indigo, Cyan, and Violet overlapping curves
+    points_cyan = []
+    points_indigo = []
+    points_violet = []
 
-    # Top Half (Kelly Green)
-    img.fill_rect(0, top_y, width, half_h, (0, 135, 90, 255))
-    top_cx = width // 2
-    top_cy = top_y + half_h // 2 - int(height * 0.04)
-    radius = int(width * 0.11)
-    img.fill_circle(top_cx, top_cy, radius, (0, 168, 107, 255))
-    img.draw_circle(top_cx, top_cy, radius, (255, 255, 255, 255), 2)
-    # Checkmark
-    chk_scale = int(radius * 0.45)
-    img.draw_line(top_cx - chk_scale, top_cy, top_cx - chk_scale // 3, top_cy + chk_scale, (255, 255, 255, 255), 3)
-    img.draw_line(top_cx - chk_scale // 3, top_cy + chk_scale, top_cx + chk_scale, top_cy - chk_scale * 2 // 3, (255, 255, 255, 255), 3)
+    num_pts = 60
+    for i in range(num_pts):
+        angle = 2 * math.pi * i / num_pts
+        # Trifolium / Trefoil knot projection
+        r_mod = radius * (0.8 + 0.25 * math.cos(3 * angle))
+        px = cx + int(r_mod * math.cos(angle))
+        py = cy + int(r_mod * math.sin(angle))
 
-    label_scale = 2 if width >= 200 else 1
-    top_label = "CONFIRM [UP]"
-    tl_w = len(top_label) * (6 * label_scale)
-    img.draw_simple_text(top_label, (width - tl_w) // 2, top_y + half_h - 7 * label_scale - 4, (255, 255, 255, 255), label_scale)
+        if i < num_pts // 3:
+            points_cyan.append((px, py))
+        elif i < 2 * num_pts // 3:
+            points_indigo.append((px, py))
+        else:
+            points_violet.append((px, py))
 
-    # Bottom Half (Red)
-    img.fill_rect(0, bot_y, width, half_h, (217, 56, 30, 255))
-    bot_cx = width // 2
-    bot_cy = bot_y + half_h // 2 - int(height * 0.04)
-    img.fill_circle(bot_cx, bot_cy, radius, (178, 34, 34, 255))
-    img.draw_circle(bot_cx, bot_cy, radius, (255, 255, 255, 255), 2)
-    # Cross
-    cr_scale = int(radius * 0.45)
-    img.draw_line(bot_cx - cr_scale, bot_cy - cr_scale, bot_cx + cr_scale, bot_cy + cr_scale, (255, 255, 255, 255), 3)
-    img.draw_line(bot_cx - cr_scale, bot_cy + cr_scale, bot_cx + cr_scale, bot_cy - cr_scale, (255, 255, 255, 255), 3)
+    # Render glowing orbital tracks
+    all_pts = points_cyan + points_indigo + points_violet
+    for i in range(len(all_pts)):
+        p1 = all_pts[i]
+        p2 = all_pts[(i + 1) % len(all_pts)]
+        if i < len(all_pts) // 3:
+            color = (0, 240, 255, 255)  # Neon Cyan
+        elif i < 2 * len(all_pts) // 3:
+            color = (99, 102, 241, 255)  # Electric Indigo
+        else:
+            color = (168, 85, 247, 255)  # Violet
+        canvas.draw_line(p1[0], p1[1], p2[0], p2[1], color, max(2, radius // 12))
 
-    bot_label = "DISAPPROVE [DOWN]"
-    bl_w = len(bot_label) * (6 * label_scale)
-    img.draw_simple_text(bot_label, (width - bl_w) // 2, bot_y + half_h - 7 * label_scale - 4, (255, 255, 255, 255), label_scale)
-
-    # Divider line
-    img.draw_line(0, bot_y, width, bot_y, (0, 0, 0, 255), 2)
-    return img
+    # Center Energy Core
+    core_r = max(4, radius // 4)
+    canvas.fill_circle(cx, cy, core_r + 2, (0, 240, 255, 120))
+    canvas.fill_circle(cx, cy, core_r, (255, 255, 255, 255))
 
 
-def generate_splash_screen(width: int, height: int) -> ImageBuffer:
-    img = ImageBuffer(width, height, (11, 26, 48, 255))
-
-    # Header
-    scale = 2 if width >= 200 else 1
-    title = "AGENT APPROVALS"
-    t_w = len(title) * (6 * scale)
-    img.draw_simple_text(title, (width - t_w) // 2, 10, (255, 255, 255, 255), scale)
-
-    # Center mini layout preview box
-    card_w = int(width * 0.35)
-    card_h = int(height * 0.38)
-    card_x = (width - card_w) // 2
-    card_y = int(height * 0.16)
-
-    # Bezel
-    img.fill_rect(card_x - 3, card_y - 3, card_w + 6, card_h + 6, (0, 0, 0, 255))
-    img.draw_circle(card_x + card_w // 2, card_y + card_h // 2, card_w // 2 + 4, (255, 255, 255, 255), 1)
-
-    # Mini top green
-    m_half = card_h // 2
-    img.fill_rect(card_x, card_y, card_w, m_half, (0, 135, 90, 255))
-    img.fill_circle(card_x + card_w // 2, card_y + m_half // 2, 9, (0, 168, 107, 255))
-    img.draw_circle(card_x + card_w // 2, card_y + m_half // 2, 9, (255, 255, 255, 255), 1)
-
-    # Mini bot red
-    img.fill_rect(card_x, card_y + m_half, card_w, m_half, (217, 56, 30, 255))
-    img.fill_circle(card_x + card_w // 2, card_y + m_half + m_half // 2, 9, (178, 34, 34, 255))
-    img.draw_circle(card_x + card_w // 2, card_y + m_half + m_half // 2, 9, (255, 255, 255, 255), 1)
-
-    # Explanation lines
-    lines = [
-        "APPROVE YOUR CODING AGENT",
-        "(LIKE ANTIGRAVITY)",
-        "FROM YOUR WRIST!"
-    ]
-    txt_y = card_y + card_h + 12
-    for line in lines:
-        lw = len(line) * 6
-        img.draw_simple_text(line, (width - lw) // 2, txt_y, (200, 220, 240, 255), 1)
-        txt_y += 10
-
-    # Footer
-    foot = "PRESS ANY BUTTON"
-    fw = len(foot) * 6
-    img.draw_simple_text(foot, (width - fw) // 2, height - 16, (0, 230, 118, 255), 1)
-    return img
-
-
-def generate_banner() -> ImageBuffer:
-    width = 720
-    height = 320
-    img = ImageBuffer(width, height, (11, 26, 48, 255))
-
-    # Background ambient glows
-    for y in range(height):
-        for x in range(width):
-            gx1 = (x - 180) ** 2 + (y - 160) ** 2
-            gx2 = (x - 540) ** 2 + (y - 160) ** 2
-            if gx1 < 160 ** 2:
-                intensity = int((1.0 - (gx1 / (160 ** 2))) * 40)
-                img.set_pixel(x, y, (0, 135, 90, intensity))
-            if gx2 < 160 ** 2:
-                intensity = int((1.0 - (gx2 / (160 ** 2))) * 40)
-                img.set_pixel(x, y, (217, 56, 30, intensity))
-
-    # Center Pebble watch chassis graphic (Emery 200x228 frame)
-    watch_w = 140
-    watch_h = 160
-    wx = (width - watch_w) // 2
-    wy = 40
-
-    # Watch frame
-    img.fill_rect(wx - 6, wy - 6, watch_w + 12, watch_h + 12, (20, 20, 22, 255))
-    img.draw_circle(wx + watch_w // 2, wy + watch_h // 2, watch_w // 2 + 10, (60, 64, 67, 255), 2)
-
-    # Top half (Green Confirm)
-    wh_half = watch_h // 2
-    img.fill_rect(wx, wy, watch_w, wh_half, (0, 135, 90, 255))
-    img.fill_circle(wx + watch_w // 2, wy + wh_half // 2, 20, (0, 168, 107, 255))
-    img.draw_circle(wx + watch_w // 2, wy + wh_half // 2, 20, (255, 255, 255, 255), 2)
-    img.draw_line(wx + watch_w // 2 - 8, wy + wh_half // 2, wx + watch_w // 2 - 2, wy + wh_half // 2 + 8, (255, 255, 255, 255), 3)
-    img.draw_line(wx + watch_w // 2 - 2, wy + wh_half // 2 + 8, wx + watch_w // 2 + 8, wy + wh_half // 2 - 6, (255, 255, 255, 255), 3)
-
-    # Bottom half (Red Disapprove)
-    img.fill_rect(wx, wy + wh_half, watch_w, wh_half, (217, 56, 30, 255))
-    img.fill_circle(wx + watch_w // 2, wy + wh_half + wh_half // 2, 20, (178, 34, 34, 255))
-    img.draw_circle(wx + watch_w // 2, wy + wh_half + wh_half // 2, 20, (255, 255, 255, 255), 2)
-    img.draw_line(wx + watch_w // 2 - 7, wy + wh_half + wh_half // 2 - 7, wx + watch_w // 2 + 7, wy + wh_half + wh_half // 2 + 7, (255, 255, 255, 255), 3)
-    img.draw_line(wx + watch_w // 2 - 7, wy + wh_half + wh_half // 2 + 7, wx + watch_w // 2 + 7, wy + wh_half + wh_half // 2 - 7, (255, 255, 255, 255), 3)
-
-    # Text Banner
-    title = "AGENT APPROVALS"
-    tw = len(title) * (6 * 3)
-    img.draw_simple_text(title, (width - tw) // 2, 220, (255, 255, 255, 255), 3)
-
-    subtitle = "ONE-CLICK CODING AGENT APPROVALS FOR PEBBLE TIME 2"
-    sw = len(subtitle) * (6 * 1)
-    img.draw_simple_text(subtitle, (width - sw) // 2, 255, (0, 230, 118, 255), 1)
-
-    sub2 = "GOOGLE ANTIGRAVITY - CURSOR - CLAUDE CODE"
-    s2w = len(sub2) * 6
-    img.draw_simple_text(sub2, (width - s2w) // 2, 275, (180, 200, 220, 255), 1)
-
-    by = "BY @SAVELEE"
-    byw = len(by) * 6
-    img.draw_simple_text(by, (width - byw) // 2, 295, (100, 140, 180, 255), 1)
-
-    return img
-
-
-def generate_large_icon(size: int = 144) -> ImageBuffer:
-    img = ImageBuffer(size, size, (0, 0, 0, 0))
+def generate_app_icon(size: int) -> Canvas:
+    """Generate Antigravity logo with a vibrant Green Checkmark Approve Button on top."""
+    canvas = Canvas(size, size, (0, 0, 0, 0))
     cx = size // 2
     cy = size // 2
-    radius = size // 2 - 4
+    r = size // 2 - 2
 
-    # Rounded outer badge
-    img.fill_circle(cx, cy, radius, (11, 26, 48, 255))
-    img.draw_circle(cx, cy, radius, (0, 230, 118, 255), 4)
+    # Rounded Squircle App Badge
+    canvas.fill_rounded_rect(2, 2, size - 4, size - 4, size // 4, (11, 16, 33, 255))
+    canvas.draw_circle(cx, cy, r, (30, 41, 59, 255), 2)
 
-    # Top green half circle
-    sub_r = int(radius * 0.4)
-    img.fill_circle(cx - sub_r // 2, cy - 4, sub_r, (0, 135, 90, 255))
-    img.draw_circle(cx - sub_r // 2, cy - 4, sub_r, (255, 255, 255, 255), 2)
-    img.draw_line(cx - sub_r // 2 - 8, cy - 4, cx - sub_r // 2 - 2, cy + 4, (255, 255, 255, 255), 3)
-    img.draw_line(cx - sub_r // 2 - 2, cy + 4, cx - sub_r // 2 + 8, cy - 10, (255, 255, 255, 255), 3)
+    # 1. Antigravity Core Emblem in Center-Background
+    draw_antigravity_logo(canvas, cx, cy - size // 14, int(size * 0.38))
 
-    # Bottom red half circle
-    img.fill_circle(cx + sub_r // 2, cy + 4, sub_r, (217, 56, 30, 255))
-    img.draw_circle(cx + sub_r // 2, cy + 4, sub_r, (255, 255, 255, 255), 2)
-    img.draw_line(cx + sub_r // 2 - 7, cy + 4 - 7, cx + sub_r // 2 + 7, cy + 4 + 7, (255, 255, 255, 255), 3)
-    img.draw_line(cx + sub_r // 2 - 7, cy + 4 + 7, cx + sub_r // 2 + 7, cy + 4 - 7, (255, 255, 255, 255), 3)
+    # 2. Glowing Green Checkmark Approve Button in Foreground (Bottom Right / Center)
+    btn_r = int(size * 0.26)
+    btn_cx = size - btn_r - max(4, size // 16)
+    btn_cy = size - btn_r - max(4, size // 16)
 
-    return img
+    # Outer glow & border
+    canvas.fill_circle(btn_cx, btn_cy, btn_r + 2, (11, 16, 33, 255))
+    canvas.fill_circle(btn_cx, btn_cy, btn_r, (0, 230, 118, 255))  # Vivid Emerald
+    canvas.draw_circle(btn_cx, btn_cy, btn_r, (255, 255, 255, 255), max(1, size // 48))
+
+    # Sharp White Checkmark
+    chk_sz = int(btn_r * 0.52)
+    th = max(2, size // 36)
+    p1 = (btn_cx - chk_sz, btn_cy)
+    p2 = (btn_cx - chk_sz // 3, btn_cy + chk_sz)
+    p3 = (btn_cx + chk_sz, btn_cy - chk_sz * 2 // 3)
+    canvas.draw_line(p1[0], p1[1], p2[0], p2[1], (255, 255, 255, 255), th)
+    canvas.draw_line(p2[0], p2[1], p3[0], p3[1], (255, 255, 255, 255), th)
+
+    return canvas
+
+
+def generate_screenshot_180x180() -> Canvas:
+    """Generate 180x180 exact screenshot of the real Pebble watch app layout."""
+    size = 180
+    canvas = Canvas(size, size, (0, 0, 0, 255))
+    header_h = 20
+    usable_h = size - header_h
+    half_h = usable_h // 2
+
+    # Top Status Bar
+    canvas.fill_rect(0, 0, size, header_h, (0, 0, 0, 255))
+    status = "READY"
+    tw = len(status) * 12
+    canvas.draw_text(status, (size - tw) // 2, 4, (255, 215, 0, 255), 2)
+
+    # Top Half: Emerald Kelly Green (CONFIRM [UP])
+    top_y = header_h
+    canvas.fill_rect(0, top_y, size, half_h, (0, 135, 90, 255))
+    top_cx = size // 2
+    top_cy = top_y + half_h // 2 - 8
+    btn_r = 18
+    canvas.fill_circle(top_cx, top_cy, btn_r, (0, 168, 107, 255))
+    canvas.draw_circle(top_cx, top_cy, btn_r, (255, 255, 255, 255), 2)
+    # White checkmark
+    canvas.draw_line(top_cx - 8, top_cy, top_cx - 2, top_cy + 8, (255, 255, 255, 255), 3)
+    canvas.draw_line(top_cx - 2, top_cy + 8, top_cx + 8, top_cy - 6, (255, 255, 255, 255), 3)
+
+    label_up = "CONFIRM [UP]"
+    lu_w = len(label_up) * 6
+    canvas.draw_text(label_up, (size - lu_w) // 2, top_y + half_h - 14, (255, 255, 255, 255), 1)
+
+    # Bottom Half: Crimson Red (DISAPPROVE [DOWN])
+    bot_y = header_h + half_h
+    canvas.fill_rect(0, bot_y, size, half_h, (217, 56, 30, 255))
+    bot_cx = size // 2
+    bot_cy = bot_y + half_h // 2 - 8
+    canvas.fill_circle(bot_cx, bot_cy, btn_r, (178, 34, 34, 255))
+    canvas.draw_circle(bot_cx, bot_cy, btn_r, (255, 255, 255, 255), 2)
+    # White Cross
+    canvas.draw_line(bot_cx - 7, bot_cy - 7, bot_cx + 7, bot_cy + 7, (255, 255, 255, 255), 3)
+    canvas.draw_line(bot_cx - 7, bot_cy + 7, bot_cx + 7, bot_cy - 7, (255, 255, 255, 255), 3)
+
+    label_down = "DISAPPROVE [DOWN]"
+    ld_w = len(label_down) * 6
+    canvas.draw_text(label_down, (size - ld_w) // 2, bot_y + half_h - 14, (255, 255, 255, 255), 1)
+
+    # Divider
+    canvas.draw_line(0, bot_y, size, bot_y, (0, 0, 0, 255), 2)
+    return canvas
+
+
+def generate_banner_720x320() -> Canvas:
+    """Generate 720x320 banner featuring Antigravity logo, watch screen, and developer aesthetic."""
+    w, h = 720, 320
+    canvas = Canvas(w, h, (11, 16, 33, 255))
+
+    # Ambient cyber glows
+    for y in range(h):
+        for x in range(w):
+            d1 = (x - 140) ** 2 + (y - 160) ** 2
+            d2 = (x - 560) ** 2 + (y - 160) ** 2
+            if d1 < 180 ** 2:
+                intensity = int((1.0 - (d1 / (180 ** 2))) * 45)
+                canvas.set_pixel(x, y, (0, 240, 255, intensity))
+            if d2 < 180 ** 2:
+                intensity = int((1.0 - (d2 / (180 ** 2))) * 45)
+                canvas.set_pixel(x, y, (0, 230, 118, intensity))
+
+    # Left Side: High-tech Antigravity Emblem
+    draw_antigravity_logo(canvas, 150, 160, 85)
+
+    # Glowing Approve Checkmark on Emblem
+    canvas.fill_circle(195, 215, 28, (11, 16, 33, 255))
+    canvas.fill_circle(195, 215, 24, (0, 230, 118, 255))
+    canvas.draw_circle(195, 215, 24, (255, 255, 255, 255), 2)
+    canvas.draw_line(184, 215, 191, 223, (255, 255, 255, 255), 3)
+    canvas.draw_line(191, 223, 207, 207, (255, 255, 255, 255), 3)
+
+    # Right Side: Realistic Pebble Time 2 Watch Mockup
+    pw = 116
+    ph = 144
+    px = 530
+    py = 88
+
+    # Pebble bezel & strap hints
+    canvas.fill_rounded_rect(px - 14, py - 14, pw + 28, ph + 28, 22, (20, 24, 34, 255))
+    canvas.draw_circle(px + pw // 2, py + ph // 2, pw // 2 + 16, (45, 55, 72, 255), 2)
+
+    # Pebble screen inside mockup
+    canvas.fill_rect(px, py, pw, 14, (0, 0, 0, 255))
+    canvas.draw_text("READY", px + 36, py + 3, (255, 215, 0, 255), 1)
+
+    # Split screen (Green / Red)
+    half_mock = (ph - 14) // 2
+    canvas.fill_rect(px, py + 14, pw, half_mock, (0, 135, 90, 255))
+    canvas.fill_circle(px + pw // 2, py + 14 + half_mock // 2, 13, (0, 168, 107, 255))
+    canvas.draw_circle(px + pw // 2, py + 14 + half_mock // 2, 13, (255, 255, 255, 255), 1)
+    canvas.draw_line(px + pw // 2 - 5, py + 14 + half_mock // 2, px + pw // 2 - 1, py + 14 + half_mock // 2 + 5, (255, 255, 255, 255), 2)
+    canvas.draw_line(px + pw // 2 - 1, py + 14 + half_mock // 2 + 5, px + pw // 2 + 5, py + 14 + half_mock // 2 - 4, (255, 255, 255, 255), 2)
+
+    canvas.fill_rect(px, py + 14 + half_mock, pw, half_mock, (217, 56, 30, 255))
+    canvas.fill_circle(px + pw // 2, py + 14 + half_mock + half_mock // 2, 13, (178, 34, 34, 255))
+    canvas.draw_circle(px + pw // 2, py + 14 + half_mock + half_mock // 2, 13, (255, 255, 255, 255), 1)
+    canvas.draw_line(px + pw // 2 - 4, py + 14 + half_mock + half_mock // 2 - 4, px + pw // 2 + 4, py + 14 + half_mock + half_mock // 2 + 4, (255, 255, 255, 255), 2)
+    canvas.draw_line(px + pw // 2 - 4, py + 14 + half_mock + half_mock // 2 + 4, px + pw // 2 + 4, py + 14 + half_mock + half_mock // 2 - 4, (255, 255, 255, 255), 2)
+
+    canvas.draw_line(px, py + 14 + half_mock, px + pw, py + 14 + half_mock, (0, 0, 0, 255), 2)
+
+    # Center Typography
+    title = "ANTIGRAVITY"
+    canvas.draw_text(title, 265, 95, (0, 240, 255, 255), 3)
+
+    subtitle = "WRIST APPROVALS"
+    canvas.draw_text(subtitle, 265, 130, (255, 255, 255, 255), 3)
+
+    desc = "ONE-CLICK PEBBLE TIME 2 ACTIONS"
+    canvas.draw_text(desc, 265, 170, (0, 230, 118, 255), 1)
+
+    desc2 = "APPROVE / REJECT AI CODING PROMPTS"
+    canvas.draw_text(desc2, 265, 190, (148, 163, 184, 255), 1)
+
+    tag = "BY @SAVELEE - GITHUB.COM/SAVELEE"
+    canvas.draw_text(tag, 265, 225, (99, 102, 241, 255), 1)
+
+    return canvas
 
 
 def main():
     out_dir = "store_assets"
     os.makedirs(out_dir, exist_ok=True)
 
-    # 1. Store Banner (720x320)
-    banner = generate_banner()
-    banner.save_png(os.path.join(out_dir, "banner_720x320.png"))
+    # 1. Exact 180x180 screenshot of real app
+    s_180 = generate_screenshot_180x180()
+    s_180.save(os.path.join(out_dir, "screenshot_180x180.png"))
 
-    # 2. Large Appstore Icon (144x144 & 80x80)
-    icon_144 = generate_large_icon(144)
-    icon_144.save_png(os.path.join(out_dir, "icon_large_144x144.png"))
+    # 2. Exact 720x320 Banner with Antigravity logo
+    banner = generate_banner_720x320()
+    banner.save(os.path.join(out_dir, "banner_720x320.png"))
 
-    icon_80 = generate_large_icon(80)
-    icon_80.save_png(os.path.join(out_dir, "icon_80x80.png"))
+    # 3. Exact 144x144 App Icon (Antigravity logo + Green Checkmark)
+    icon_144 = generate_app_icon(144)
+    icon_144.save(os.path.join(out_dir, "icon_144x144.png"))
 
-    # 3. Pebble Time 2 (Emery: 200x228) Screenshots
-    # Screenshot 1: Main Action Screen
-    s1 = generate_action_screen(200, 228, status_text="READY", status_color=(255, 215, 0, 255))
-    s1.save_png(os.path.join(out_dir, "screenshot_1_action_emery.png"))
+    # 4. Exact 48x48 App Icon (Antigravity logo + Green Checkmark)
+    icon_48 = generate_app_icon(48)
+    icon_48.save(os.path.join(out_dir, "icon_48x48.png"))
 
-    # Screenshot 2: Splash / Info Screen
-    s2 = generate_splash_screen(200, 228)
-    s2.save_png(os.path.join(out_dir, "screenshot_2_splash_emery.png"))
-
-    # Screenshot 3: Action Confirmed / SENT OK
-    s3 = generate_action_screen(200, 228, status_text="SENT OK", status_color=(0, 230, 118, 255))
-    s3.save_png(os.path.join(out_dir, "screenshot_3_sent_emery.png"))
-
-    # 4. Pebble Time / Pebble Time Steel (Basalt: 144x168) Screenshots
-    b1 = generate_action_screen(144, 168, status_text="READY", status_color=(255, 215, 0, 255))
-    b1.save_png(os.path.join(out_dir, "screenshot_4_action_basalt.png"))
-
-    b2 = generate_splash_screen(144, 168)
-    b2.save_png(os.path.join(out_dir, "screenshot_5_splash_basalt.png"))
-
-    print("\nAll store submission image resources generated successfully in 'store_assets/' directory!")
+    print("\n✨ All requested store assets generated with Antigravity branding!")
 
 
 if __name__ == "__main__":

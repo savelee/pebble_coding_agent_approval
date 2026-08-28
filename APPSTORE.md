@@ -1,12 +1,12 @@
 # Rebble / Pebble App Store Submission Details
 
-Use the following metadata and descriptions when submitting **Agent Approvals** to the [Rebble Appstore](https://apps.rebble.io/) / [Pebble Developer Portal](https://dev-portal.rebble.io/):
+Use the following metadata and image assets when submitting **Agent Approvals** to the [Rebble Appstore](https://apps.rebble.io/) / [Pebble Developer Portal](https://dev-portal.rebble.io/):
 
 ---
 
 ## 🏷️ Basic Metadata
 
-* **App Title**: `Agent Approvals`
+* **App Title**: `Agent Approvals (Antigravity)`
 * **Developer Name**: `Lee Boonstra (@savelee)`
 * **Category**: `Tools & Utilities` / `Daily`
 * **Version**: `1.1.0`
@@ -19,16 +19,12 @@ Use the following metadata and descriptions when submitting **Agent Approvals** 
 
 Upload the corresponding image files from the **`store_assets/`** directory:
 
-| Asset Type | File Path | Dimensions | Usage |
+| Asset Name | File Path | Dimensions | Description |
 | :--- | :--- | :--- | :--- |
-| **Store Header Banner** | `store_assets/banner_720x320.png` | 720 × 320 px | Featured store listing header banner |
-| **Large App Icon** | `store_assets/icon_large_144x144.png` | 144 × 144 px | Main App Store icon |
-| **Small App Icon** | `store_assets/icon_80x80.png` | 80 × 80 px | Store search results & list view icon |
-| **Screenshot 1 (PT2)** | `store_assets/screenshot_1_action_emery.png` | 200 × 228 px | Pebble Time 2 Main Split-Screen (`READY`) |
-| **Screenshot 2 (PT2)** | `store_assets/screenshot_2_splash_emery.png` | 200 × 228 px | Pebble Time 2 Splash & Info Screen |
-| **Screenshot 3 (PT2)** | `store_assets/screenshot_3_sent_emery.png` | 200 × 228 px | Pebble Time 2 Confirmation (`SENT OK`) |
-| **Screenshot 4 (PT)** | `store_assets/screenshot_4_action_basalt.png` | 144 × 168 px | Pebble Time Main Split-Screen |
-| **Screenshot 5 (PT)** | `store_assets/screenshot_5_splash_basalt.png` | 144 × 168 px | Pebble Time Splash Screen |
+| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Antigravity glowing cyber logo, watch mockup & typography |
+| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | Antigravity emblem with green approve checkmark badge |
+| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | Antigravity emblem with green approve checkmark badge |
+| **Real App Screenshot** | `store_assets/screenshot_180x180.png` | **180 × 180 px** | Real split-screen layout (`READY`, Confirm [UP], Disapprove [DOWN]) |
 
 ---
 
