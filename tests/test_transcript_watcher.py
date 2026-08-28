@@ -19,31 +19,46 @@ import os
 import tempfile
 import time
 
-from listener.services.transcript_watcher import TranscriptWatcher
+from listener.services.transcript_watcher import (
+    TranscriptWatcher,
+    clean_markdown_text,
+)
+
+
+def test_clean_markdown_text():
+    """Verify markdown strip utility removes links, bullets, and headers."""
+    assert clean_markdown_text("### Header Title") == "Header Title"
+    assert (
+        clean_markdown_text("* [Makefile](file:///path) updated") == "Makefile updated"
+    )
+    assert clean_markdown_text("**bold text** and `code`") == "bold text and code"
 
 
 def test_transcript_watcher_summary_extraction():
-    """Verify clean 1-line summary extraction from various markdown agent texts."""
+    """Verify questions and action prompts take priority over header titles."""
     watcher = TranscriptWatcher()
 
     assert watcher.extract_summary("") is None
     assert watcher.extract_summary("   \n  \n") is None
 
-    # Header extraction
-    header_text = "# Proposal for Pebble Agent Approvals\nSome details here."
-    assert watcher.extract_summary(header_text) == "Proposal for Pebble Agent Approvals"
-
-    # Confirmation / question phrase extraction
-    question_text = (
-        "Analysis complete.\nDo you want to confirm this implementation plan?"
+    # Question takes priority even when headers precede it
+    response_with_question = (
+        "### Proposed Enhancement for Version 1.3\n"
+        "Would you like me to update the project [Makefile](file:///) "
+        "to add a unified make start target?"
     )
-    assert "confirm" in watcher.extract_summary(question_text).lower()
+    extracted = watcher.extract_summary(response_with_question)
+    assert extracted.startswith("Would you like me to update the project Makefile")
+
+    # Header extraction fallback when no question exists
+    header_text = "# Initializing Test Suite\nSetting up fixtures."
+    assert watcher.extract_summary(header_text) == "Initializing Test Suite"
 
     # Generic first line
-    prose_text = "All 25 unit tests have passed successfully!"
+    prose_text = "All 28 unit tests have passed successfully!"
     assert (
         watcher.extract_summary(prose_text)
-        == "All 25 unit tests have passed successfully!"
+        == "All 28 unit tests have passed successfully!"
     )
 
 

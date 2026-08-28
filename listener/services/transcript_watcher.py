@@ -26,6 +26,17 @@ from typing import Callable, Optional
 logger = logging.getLogger(__name__)
 
 
+def clean_markdown_text(text: str) -> str:
+    """Remove markdown links, bold, code ticks, and special formatting."""
+    # Convert [label](url) -> label
+    text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
+    # Remove markdown headers and list bullets
+    text = re.sub(r"^[\#\*\-\>\s]+", "", text)
+    # Remove bold, italics, inline code ticks
+    text = re.sub(r"[\*\_`]", "", text)
+    return text.strip()
+
+
 class TranscriptWatcher:
     """Monitors active Antigravity transcript logs and notifies on agent updates."""
 
@@ -65,7 +76,7 @@ class TranscriptWatcher:
         return max(files, key=os.path.getmtime)
 
     def extract_summary(self, content: str) -> Optional[str]:
-        """Extract a clean, concise 1-line summary from agent response content.
+        """Extract a clean, concise summary prioritizing questions and actions.
 
         Args:
             content: Raw string content from planner response.
@@ -80,20 +91,39 @@ class TranscriptWatcher:
         if not lines:
             return None
 
+        # Priority 1: Direct questions asking for user input or approval
+        for line in lines:
+            if "?" in line and len(line) > 10 and not line.startswith("### FAQ"):
+                cleaned = clean_markdown_text(line)
+                if len(cleaned) > 10:
+                    return cleaned[:180]
+
+        # Priority 2: Confirmation / action prompts
+        for line in lines:
+            lower = line.lower()
+            if (
+                "confirm" in lower
+                or "approve" in lower
+                or "disapprove" in lower
+                or "proceed" in lower
+            ):
+                if not line.startswith("1.") and not line.startswith("*"):
+                    cleaned = clean_markdown_text(line)
+                    if len(cleaned) > 10:
+                        return cleaned[:180]
+
+        # Priority 3: First meaningful header
         for line in lines:
             if line.startswith("#"):
-                clean = re.sub(r"^#+\s*", "", line).strip()
-                if clean:
-                    return clean[:160]
-            if "?" in line or "confirm" in line.lower() or "approve" in line.lower():
-                clean = re.sub(r"[\*\_]", "", line).strip()
-                if len(clean) > 8:
-                    return clean[:160]
+                cleaned = clean_markdown_text(line)
+                if cleaned:
+                    return cleaned[:180]
 
-        first_line = lines[0]
-        first_line = re.sub(r"[\*\_#`]", "", first_line).strip()
-        if len(first_line) > 5:
-            return first_line[:160]
+        # Priority 4: First non-empty prose line
+        for line in lines:
+            cleaned = clean_markdown_text(line)
+            if len(cleaned) > 8:
+                return cleaned[:180]
 
         return None
 
