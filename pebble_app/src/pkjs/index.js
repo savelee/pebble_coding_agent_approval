@@ -1,0 +1,185 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @fileoverview PebbleKit JS application for Pebble Agent Approvals.
+ */
+
+var messageKeys;
+try {
+  messageKeys = require('message_keys');
+} catch (e) {
+  messageKeys = {
+    ACTION: 'ACTION',
+    STATUS: 'STATUS',
+    HOST: 'HOST',
+    PORT: 'PORT',
+  };
+}
+
+var DEFAULT_HOST = '127.0.0.1';
+var DEFAULT_PORT = '5000';
+
+/**
+ * Retrieve the configured host and port from localStorage.
+ * @returns {{host: string, port: string}} The server endpoint details.
+ */
+function getServerConfig() {
+  var host = localStorage.getItem('HOST') || DEFAULT_HOST;
+  var port = localStorage.getItem('PORT') || DEFAULT_PORT;
+  return { host: host, port: port };
+}
+
+/**
+ * Send status string back to Pebble C app.
+ * @param {string} statusMsg Status label to display on watch UI.
+ */
+function sendStatusToWatch(statusMsg) {
+  var statusKey = (messageKeys && typeof messageKeys.STATUS !== 'undefined')
+    ? messageKeys.STATUS
+    : 'STATUS';
+  var dict = {};
+  dict[statusKey] = statusMsg;
+
+  Pebble.sendAppMessage(
+    dict,
+    function() {
+      console.log('Successfully sent status to watch: ' + statusMsg);
+    },
+    function(e) {
+      console.error('Failed to send status to watch: ' + JSON.stringify(e));
+    }
+  );
+}
+
+/**
+ * Dispatch HTTP POST request to Python listener.
+ * @param {string} action Action string ('confirm' or 'disapprove').
+ */
+function postActionToListener(action) {
+  var config = getServerConfig();
+  var url = 'http://' + config.host + ':' + config.port + '/api/action';
+  console.log('Sending action: ' + action + ' to ' + url);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 5000;
+
+  xhr.onload = function() {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      console.log('Server response: ' + xhr.responseText);
+      sendStatusToWatch('SENT OK');
+    } else {
+      console.error('Server returned error status: ' + xhr.status);
+      sendStatusToWatch('HTTP ' + xhr.status);
+    }
+  };
+
+  xhr.onerror = function() {
+    console.error('Network request failed for ' + url);
+    // If user hasn't set custom IP and default failed, try localhost as fallback
+    sendStatusToWatch('NET ERROR');
+  };
+
+  xhr.ontimeout = function() {
+    console.error('Request timed out for ' + url);
+    sendStatusToWatch('TIMEOUT');
+  };
+
+  xhr.send(JSON.stringify({ action: action }));
+}
+
+// Lifecycle listeners
+Pebble.addEventListener('ready', function() {
+  console.log('PebbleKit JS ready for Agent Approvals. Target=' + DEFAULT_HOST + ':' + DEFAULT_PORT);
+});
+
+Pebble.addEventListener('appmessage', function(e) {
+  var dict = e.payload;
+  console.log('Received AppMessage from watch: ' + JSON.stringify(dict));
+
+  var actionKey = (messageKeys && typeof messageKeys.ACTION !== 'undefined')
+    ? messageKeys.ACTION
+    : 'ACTION';
+
+  var actionVal = typeof dict[actionKey] !== 'undefined'
+    ? dict[actionKey]
+    : (typeof dict.ACTION !== 'undefined' ? dict.ACTION : dict[0]);
+
+  if (typeof actionVal !== 'undefined') {
+    var actionStr = (actionVal === 0 || actionVal === '0') ? 'confirm' : 'disapprove';
+    postActionToListener(actionStr);
+  }
+});
+
+// Self-contained HTML settings page generator
+function generateConfigHtml() {
+  var config = getServerConfig();
+  var html = '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<style>' +
+    'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; color: #333; }' +
+    '.card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 400px; margin: auto; }' +
+    'h2 { margin-top: 0; color: #1a73e8; font-size: 20px; }' +
+    'label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-top: 15px; margin-bottom: 5px; }' +
+    'input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; font-family: monospace; }' +
+    'button { width: 100%; margin-top: 25px; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }' +
+    'button:active { background: #1557b0; }' +
+    'p.sub { font-size: 12px; color: #777; margin-top: 4px; }' +
+    '</style></head><body>' +
+    '<div class="card">' +
+    '<h2>Agent Approvals Settings</h2>' +
+    '<p class="sub">Configure your computer\'s local network address where the Python listener is running.</p>' +
+    '<form id="settings-form">' +
+    '<label>Listener Host / IP Address</label>' +
+    '<input type="text" id="host" value="' + config.host + '" placeholder="127.0.0.1 (emulator) or LAN IP" required>' +
+    '<label>Port</label>' +
+    '<input type="number" id="port" value="' + config.port + '" placeholder="5000" required>' +
+    '<button type="submit">Save & Close</button>' +
+    '</form></div>' +
+    '<script>' +
+    'document.getElementById("settings-form").addEventListener("submit", function(e) {' +
+    '  e.preventDefault();' +
+    '  var hostVal = document.getElementById("host").value.trim();' +
+    '  var portVal = document.getElementById("port").value.trim();' +
+    '  var options = { host: hostVal, port: portVal };' +
+    '  var locationUri = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));' +
+    '  window.location.href = locationUri;' +
+    '});' +
+    '</script></body></html>';
+  return 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+}
+
+Pebble.addEventListener('showConfiguration', function() {
+  var url = generateConfigHtml();
+  Pebble.openURL(url);
+});
+
+Pebble.addEventListener('webviewclosed', function(e) {
+  if (e && e.response) {
+    try {
+      var options = JSON.parse(decodeURIComponent(e.response));
+      if (options.host) {
+        localStorage.setItem('HOST', options.host);
+      }
+      if (options.port) {
+        localStorage.setItem('PORT', options.port);
+      }
+      console.log('Saved settings: Host=' + options.host + ', Port=' + options.port);
+      sendStatusToWatch('CFG SAVED');
+    } catch (err) {
+      console.error('Failed to parse config response: ' + err);
+    }
+  }
+});

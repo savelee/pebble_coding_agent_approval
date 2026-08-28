@@ -1,0 +1,43 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Agent Approvals Configuration"
+  },
+  {
+    "type": "text",
+    "defaultValue": "Configure the local IP address and port of your machine running the Python listener."
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Server Connection"
+      },
+      {
+        "type": "input",
+        "messageKey": "HOST",
+        "defaultValue": "127.0.0.1",
+        "label": "Listener Host / IP",
+        "attributes": {
+          "placeholder": "127.0.0.1 (emulator) or LAN IP",
+          "type": "text"
+        }
+      },
+      {
+        "type": "input",
+        "messageKey": "PORT",
+        "defaultValue": "5000",
+        "label": "Port",
+        "attributes": {
+          "placeholder": "5000",
+          "type": "number"
+        }
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save Settings"
+  }
+]

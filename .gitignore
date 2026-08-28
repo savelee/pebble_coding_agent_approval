@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+.DS_Store
+
+# Pebble build artifacts
+pebble_app/build/
+pebble_app/.waf*
+pebble_app/.lock*
+*.pbw
