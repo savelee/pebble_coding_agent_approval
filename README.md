@@ -99,9 +99,13 @@ If you want to approve actions when your phone is on cellular data or outside yo
 
 ### Step 7: Approve Actions from Your Wrist!
 Whenever **Antigravity**, **Claude Code**, or **Cursor** requests permission to execute a command or modify files:
-* 🟢 **UP BUTTON**: Confirms the prompt (injects `"i confirm\n"`) with haptic pulse.
-* 🔴 **DOWN BUTTON**: Disapproves the prompt (injects `"i disapprove\n"`) with haptic pulse.
+* 🟢 **UP BUTTON**: Sends keystring `"i confirm\n"` into the focused window/prompt with a haptic pulse.
+* 🔴 **DOWN BUTTON**: Sends keystring `"i disapprove\n"` into the focused window/prompt with a haptic pulse.
 * 🔵 **SELECT BUTTON**: Re-opens the layout preview and info screen.
+
+> [!IMPORTANT]
+> **Active Chat Focus**: The physical buttons inject simulated keystrings directly into your Mac's active focused window. Ensure your cursor / active focus is on your agent chat or terminal input prompt.
+
 
 ---
 
