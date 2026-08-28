@@ -1,13 +1,12 @@
 {
   "name": "pebble-approvals",
   "author": "Lee Boonstra (@savelee)",
-  "version": "1.0.0",
-  "description": "Approve or disapprove AI coding assistant actions (Google Antigravity, Jetski, Cursor, Claude Code) from your Pebble watch. Companion Python listener available at https://github.com/savelee",
+  "version": "1.1.0",
+  "description": "Approve your coding agent (like Antigravity) from your wrist, with the Pebble Time 2 app (and web extension). Companion listener: https://github.com/savelee/pebble_coding_agent_approval",
   "keywords": [
     "pebble-app",
     "ai",
     "antigravity",
-    "jetski",
     "cursor",
     "developer-tools",
     "approvals"
