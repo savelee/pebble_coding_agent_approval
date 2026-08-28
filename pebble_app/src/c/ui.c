@@ -163,7 +163,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
 
   // 3. Middle dividing line
   graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_context_set_stroke_width(2);
+  graphics_context_set_stroke_width(ctx, 2);
   graphics_draw_line(
       ctx,
       GPoint(0, bottom_start_y),
