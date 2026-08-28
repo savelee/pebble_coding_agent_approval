@@ -133,7 +133,6 @@ def generate_emery_screenshot_200x228(status_text: str = "READY", status_color=(
 
     # Top Status Bar
     draw.rectangle([0, 0, w, header_h], fill=(0, 0, 0, 255))
-    # Center text
     draw.text((w // 2 - len(status_text) * 4, 5), status_text, fill=status_color)
 
     # Top Half: Kelly Green
@@ -163,21 +162,38 @@ def generate_emery_screenshot_200x228(status_text: str = "READY", status_color=(
     return img
 
 
-def generate_emery_splash_screenshot_200x228(official_logo_path: str) -> Image.Image:
-    """Generate exact 200x228 Emery (Pebble Time 2) splash screen screenshot."""
+def generate_emery_splash_screenshot_200x228() -> Image.Image:
+    """Generate exact 200x228 Emery splash screen screenshot with layout preview box."""
     w, h = 200, 228
     img = Image.new("RGBA", (w, h), (11, 26, 48, 255))
     draw = ImageDraw.Draw(img)
 
     # Title
-    draw.text((w // 2 - 44, 8), "ANTIGRAVITY", fill=(0, 240, 255, 255))
+    draw.text((w // 2 - 52, 6), "AGENT APPROVALS", fill=(255, 255, 255, 255))
 
-    # Official Antigravity Logo in center
-    logo = Image.open(official_logo_path).convert("RGBA")
-    logo_resized = logo.resize((68, 68), Image.Resampling.LANCZOS)
-    img.paste(logo_resized, ((w - 68) // 2, 32), logo_resized)
+    # Miniature watch layout preview card
+    card_w = 64
+    card_h = 74
+    card_x = (w - card_w) // 2
+    card_y = 26
 
-    # Explanation Lines
+    draw.rounded_rectangle([card_x - 3, card_y - 3, card_x + card_w + 3, card_y + card_h + 3], radius=4, fill=(0, 0, 0, 255), outline=(255, 255, 255, 255), width=1)
+
+    # Top mini green
+    mini_half = card_h // 2
+    draw.rectangle([card_x, card_y, card_x + card_w, card_y + mini_half], fill=(0, 135, 90, 255))
+    draw.ellipse([card_x + card_w // 2 - 11, card_y + mini_half // 2 - 11, card_x + card_w // 2 + 11, card_y + mini_half // 2 + 11], fill=(0, 168, 107, 255), outline=(255, 255, 255, 255), width=1)
+    draw.line([(card_x + card_w // 2 - 5, card_y + mini_half // 2), (card_x + card_w // 2 - 2, card_y + mini_half // 2 + 4), (card_x + card_w // 2 + 5, card_y + mini_half // 2 - 3)], fill=(255, 255, 255, 255), width=1)
+
+    # Bottom mini red
+    draw.rectangle([card_x, card_y + mini_half, card_x + card_w, card_y + card_h], fill=(217, 56, 30, 255))
+    draw.ellipse([card_x + card_w // 2 - 11, card_y + mini_half + mini_half // 2 - 11, card_x + card_w // 2 + 11, card_y + mini_half + mini_half // 2 + 11], fill=(178, 34, 34, 255), outline=(255, 255, 255, 255), width=1)
+    draw.line([(card_x + card_w // 2 - 4, card_y + mini_half + mini_half // 2 - 4), (card_x + card_w // 2 + 4, card_y + mini_half + mini_half // 2 + 4)], fill=(255, 255, 255, 255), width=1)
+    draw.line([(card_x + card_w // 2 - 4, card_y + mini_half + mini_half // 2 + 4), (card_x + card_w // 2 + 4, card_y + mini_half + mini_half // 2 - 4)], fill=(255, 255, 255, 255), width=1)
+
+    draw.line([(card_x, card_y + mini_half), (card_x + card_w, card_y + mini_half)], fill=(0, 0, 0, 255), width=1)
+
+    # Explanation text
     lines = [
         "Approve your coding agent",
         "(like Antigravity) from your",
@@ -196,9 +212,6 @@ def generate_emery_splash_screenshot_200x228(official_logo_path: str) -> Image.I
 
 def main():
     official_logo_path = "/tmp/antigravity_official.png"
-    if not os.path.exists(official_logo_path):
-        raise FileNotFoundError(f"Missing {official_logo_path}.")
-
     out_dir = "store_assets"
     os.makedirs(out_dir, exist_ok=True)
 
@@ -207,8 +220,8 @@ def main():
     s_emery_action.save(os.path.join(out_dir, "screenshot_emery_200x228.png"), format="PNG")
     print("Generated store_assets/screenshot_emery_200x228.png (200x228)")
 
-    # 2. 200x228 Emery Splash Screen
-    s_emery_splash = generate_emery_splash_screenshot_200x228(official_logo_path)
+    # 2. 200x228 Emery Splash Screen with Layout Preview
+    s_emery_splash = generate_emery_splash_screenshot_200x228()
     s_emery_splash.save(os.path.join(out_dir, "screenshot_emery_splash_200x228.png"), format="PNG")
     print("Generated store_assets/screenshot_emery_splash_200x228.png (200x228)")
 
@@ -217,21 +230,21 @@ def main():
     s_emery_sent.save(os.path.join(out_dir, "screenshot_emery_sent_200x228.png"), format="PNG")
     print("Generated store_assets/screenshot_emery_sent_200x228.png (200x228)")
 
-    # 4. App Icons (144x144, 48x48)
-    icon_144 = generate_app_icon_with_official_logo(official_logo_path, 144)
-    icon_144.save(os.path.join(out_dir, "icon_144x144.png"), format="PNG")
-    print("Generated store_assets/icon_144x144.png (144x144)")
+    # 4. App Icons (144x144, 48x48) with official Antigravity logo + Green checkmark
+    if os.path.exists(official_logo_path):
+        icon_144 = generate_app_icon_with_official_logo(official_logo_path, 144)
+        icon_144.save(os.path.join(out_dir, "icon_144x144.png"), format="PNG")
+        print("Generated store_assets/icon_144x144.png (144x144)")
 
-    icon_48 = generate_app_icon_with_official_logo(official_logo_path, 48)
-    icon_48.save(os.path.join(out_dir, "icon_48x48.png"), format="PNG")
-    print("Generated store_assets/icon_48x48.png (48x48)")
+        icon_48 = generate_app_icon_with_official_logo(official_logo_path, 48)
+        icon_48.save(os.path.join(out_dir, "icon_48x48.png"), format="PNG")
+        print("Generated store_assets/icon_48x48.png (48x48)")
 
-    # 5. 720x320 Store Banner
-    banner = generate_banner_720x320(official_logo_path)
-    banner.save(os.path.join(out_dir, "banner_720x320.png"), format="PNG")
-    print("Generated store_assets/banner_720x320.png (720x320)")
+        banner = generate_banner_720x320(official_logo_path)
+        banner.save(os.path.join(out_dir, "banner_720x320.png"), format="PNG")
+        print("Generated store_assets/banner_720x320.png (720x320)")
 
-    print("\n✨ All 200x228 Emery screenshots & assets generated successfully!")
+    print("\n✨ All assets generated successfully!")
 
 
 if __name__ == "__main__":
