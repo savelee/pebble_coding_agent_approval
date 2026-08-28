@@ -22,7 +22,7 @@ static Window *s_main_window;
 static Layer *s_canvas_layer;
 static TextLayer *s_status_layer;
 static char s_status_buffer[128] = "READY";
-static char s_prompt_buffer[128] = "";
+static char s_prompt_buffer[256] = "";
 static bool s_has_active_prompt = false;
 
 /**
@@ -62,9 +62,10 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (s_has_active_prompt) {
-    // Dismiss prompt card
+    // Dismiss message card on middle button click
     s_has_active_prompt = false;
     ui_set_status("READY");
+    vibes_short_pulse();
     if (s_canvas_layer) {
       layer_mark_dirty(s_canvas_layer);
     }
@@ -162,35 +163,39 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
 
   // 3. Middle dividing line
   graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_context_set_stroke_width(ctx, 2);
+  graphics_context_set_stroke_width(2);
   graphics_draw_line(
       ctx,
       GPoint(0, bottom_start_y),
       GPoint(bounds.size.w, bottom_start_y));
 
-  // 4. Draw Center Agent Notification Card (Huge 2-Line Punchy Prompt)
+  // 4. Draw Center Agent Notification Card (Multi-line compact text: "agent > ...")
   if (s_has_active_prompt && strlen(s_prompt_buffer) > 0) {
-    int card_w = bounds.size.w - 12;
-    int card_h = 62;
-    int card_x = 6;
-    int card_y = header_height + (usable_height - card_h) / 2;
+    int card_w = bounds.size.w - 10;
+    int card_h = usable_height - 20;
+    int card_x = 5;
+    int card_y = header_height + 10;
 
     GRect card_rect = GRect(card_x, card_y, card_w, card_h);
     graphics_context_set_fill_color(ctx, GColorBlack);
     graphics_fill_rect(ctx, card_rect, 6, GCornersAll);
     graphics_context_set_stroke_color(ctx, GColorYellow);
-    graphics_context_set_stroke_width(ctx, 3);
+    graphics_context_set_stroke_width(ctx, 2);
     graphics_draw_rect(ctx, card_rect);
 
-    // 2-Line Prompt message in huge bold 24pt font
+    // Format full message as "agent > <message>"
+    char formatted_msg[280];
+    snprintf(formatted_msg, sizeof(formatted_msg), "agent > %s", s_prompt_buffer);
+
+    // Multi-line body text (Gothic 14 / 18 allows 5-7 lines of detailed agent text)
     graphics_context_set_text_color(ctx, GColorWhite);
     graphics_draw_text(
         ctx,
-        s_prompt_buffer,
-        fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-        GRect(card_x + 6, card_y + 4, card_w - 12, 54),
-        GTextOverflowModeTrailingEllipsis,
-        GTextAlignmentCenter,
+        formatted_msg,
+        fonts_get_system_font(FONT_KEY_GOTHIC_14),
+        GRect(card_x + 6, card_y + 4, card_w - 12, card_h - 8),
+        GTextOverflowModeWordWrap,
+        GTextAlignmentLeft,
         NULL);
   }
 }

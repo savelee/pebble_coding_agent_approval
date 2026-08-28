@@ -84,16 +84,16 @@ class TranscriptWatcher:
             if line.startswith("#"):
                 clean = re.sub(r"^#+\s*", "", line).strip()
                 if clean:
-                    return clean[:80]
+                    return clean[:160]
             if "?" in line or "confirm" in line.lower() or "approve" in line.lower():
                 clean = re.sub(r"[\*\_]", "", line).strip()
                 if len(clean) > 8:
-                    return clean[:80]
+                    return clean[:160]
 
         first_line = lines[0]
         first_line = re.sub(r"[\*\_#`]", "", first_line).strip()
         if len(first_line) > 5:
-            return first_line[:80]
+            return first_line[:160]
 
         return None
 
