@@ -108,7 +108,7 @@ static void draw_cross(GContext *ctx, GPoint center, int radius) {
 
 static void canvas_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
-  int header_height = 24;
+  int header_height = 26;
   int usable_height = bounds.size.h - header_height;
   int half_height = usable_height / 2;
   int top_start_y = header_height;
@@ -119,8 +119,8 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorKellyGreen);
   graphics_fill_rect(ctx, top_rect, 0, GCornerNone);
 
-  GPoint top_center = GPoint(bounds.size.w / 2, top_start_y + half_height / 2 - 10);
-  int circle_radius = 20;
+  GPoint top_center = GPoint(bounds.size.w / 2, top_start_y + half_height / 2 - 12);
+  int circle_radius = 22;
   graphics_context_set_fill_color(ctx, GColorIslamicGreen);
   graphics_fill_circle(ctx, top_center, circle_radius);
   graphics_context_set_stroke_color(ctx, GColorWhite);
@@ -132,8 +132,8 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_text(
       ctx,
       "CONFIRM [UP]",
-      fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
-      GRect(0, top_start_y + half_height - 20, bounds.size.w, 16),
+      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+      GRect(0, top_start_y + half_height - 24, bounds.size.w, 20),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
@@ -143,7 +143,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorRed);
   graphics_fill_rect(ctx, bottom_rect, 0, GCornerNone);
 
-  GPoint bottom_center = GPoint(bounds.size.w / 2, bottom_start_y + half_height / 2 - 10);
+  GPoint bottom_center = GPoint(bounds.size.w / 2, bottom_start_y + half_height / 2 - 12);
   graphics_context_set_fill_color(ctx, GColorDarkCandyAppleRed);
   graphics_fill_circle(ctx, bottom_center, circle_radius);
   graphics_context_set_stroke_color(ctx, GColorWhite);
@@ -154,8 +154,8 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_text(
       ctx,
       "DISAPPROVE [DOWN]",
-      fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
-      GRect(0, bottom_start_y + half_height - 20, bounds.size.w, 16),
+      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+      GRect(0, bottom_start_y + half_height - 24, bounds.size.w, 20),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
@@ -168,38 +168,38 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
       GPoint(0, bottom_start_y),
       GPoint(bounds.size.w, bottom_start_y));
 
-  // 4. Draw Center Agent Notification Card if active
+  // 4. Draw Center Agent Notification Card if active (Large, High-Contrast & Readable)
   if (s_has_active_prompt && strlen(s_prompt_buffer) > 0) {
-    int card_w = bounds.size.w - 16;
-    int card_h = 76;
-    int card_x = 8;
-    int card_y = header_height + (usable_height - card_h) / 2;
+    int card_w = bounds.size.w - 8;
+    int card_h = usable_height - 16;
+    int card_x = 4;
+    int card_y = header_height + 8;
 
     GRect card_rect = GRect(card_x, card_y, card_w, card_h);
     graphics_context_set_fill_color(ctx, GColorBlack);
     graphics_fill_rect(ctx, card_rect, 4, GCornersAll);
     graphics_context_set_stroke_color(ctx, GColorYellow);
-    graphics_context_set_stroke_width(ctx, 2);
+    graphics_context_set_stroke_width(ctx, 3);
     graphics_draw_rect(ctx, card_rect);
 
-    // Title banner
+    // Title banner in large bold yellow
     graphics_context_set_text_color(ctx, GColorYellow);
     graphics_draw_text(
         ctx,
         "AGENT PROMPT",
-        fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
-        GRect(card_x + 4, card_y + 3, card_w - 8, 14),
+        fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+        GRect(card_x + 4, card_y + 4, card_w - 8, 20),
         GTextOverflowModeTrailingEllipsis,
         GTextAlignmentCenter,
         NULL);
 
-    // Message body
+    // Message body in large readable font (Gothic 18)
     graphics_context_set_text_color(ctx, GColorWhite);
     graphics_draw_text(
         ctx,
         s_prompt_buffer,
-        fonts_get_system_font(FONT_KEY_GOTHIC_14),
-        GRect(card_x + 6, card_y + 20, card_w - 12, card_h - 24),
+        fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+        GRect(card_x + 8, card_y + 26, card_w - 16, card_h - 30),
         GTextOverflowModeWordWrap,
         GTextAlignmentCenter,
         NULL);
@@ -235,12 +235,12 @@ static void main_window_load(Window *window) {
   layer_set_update_proc(s_canvas_layer, canvas_update_proc);
   layer_add_child(window_layer, s_canvas_layer);
 
-  // Dedicated Top Status Header Bar
-  int header_height = 24;
+  // Dedicated Top Status Header Bar (26px for bold status)
+  int header_height = 26;
   s_status_layer = text_layer_create(GRect(0, 0, bounds.size.w, header_height));
   text_layer_set_background_color(s_status_layer, GColorBlack);
   text_layer_set_text_color(s_status_layer, GColorYellow);
-  text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(s_status_layer, GTextAlignmentCenter);
   text_layer_set_text(s_status_layer, s_status_buffer);
   layer_add_child(window_layer, text_layer_get_layer(s_status_layer));
