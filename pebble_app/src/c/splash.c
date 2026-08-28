@@ -107,7 +107,7 @@ static void splash_canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, GColorLightGray);
   graphics_draw_text(
       ctx,
-      "Antigravity & Jetski",
+      "Antigravity",
       fonts_get_system_font(FONT_KEY_GOTHIC_14),
       GRect(0, center_y + 56, bounds.size.w, 18),
       GTextOverflowModeWordWrap,

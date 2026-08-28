@@ -17,7 +17,7 @@ Use the following metadata and descriptions when submitting **Agent Approvals** 
 
 ## 📝 Short Description (Max 100 characters)
 
-> One-click physical wrist approvals for Antigravity, Jetski, Cursor, and Claude AI agents.
+> One-click physical wrist approvals for Antigravity, Cursor, and Claude AI agents.
 
 ---
 
@@ -26,7 +26,7 @@ Use the following metadata and descriptions when submitting **Agent Approvals** 
 ```markdown
 Approve or disapprove AI coding assistant actions directly from your wrist!
 
-Designed for developers working with agentic coding environments—including Google Antigravity, Jetski, Cursor, and Claude Code—Agent Approvals pairs your Pebble smartwatch with a lightweight local Python listener service running on your computer.
+Designed for developers working with agentic coding environments—including Google Antigravity, Cursor, and Claude Code—Agent Approvals pairs your Pebble smartwatch with a lightweight local Python listener service running on your computer.
 
 Whenever your AI assistant prompts you for approval (to execute a command, modify files, or accept a plan), simply press the physical button on your watch without switching focus away from your editor:
 
@@ -56,6 +56,6 @@ https://github.com/savelee/pebble_coding_agent_approval
 ---
 
 ## 🖼️ Suggested Screenshots / Store Visuals
-1. **Screenshot 1**: Splash screen with "AGENT APPROVALS - Antigravity & Jetski".
+1. **Screenshot 1**: Splash screen with "AGENT APPROVALS - Antigravity".
 2. **Screenshot 2**: Main split-screen action screen showing green `CONFIRM [UP]` and red `DISAPPROVE [DOWN]`.
 3. **Screenshot 3**: Status header showing `CONFIRMING...` $\rightarrow$ `SENT OK`.
