@@ -177,13 +177,13 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
 
     GRect card_rect = GRect(card_x, card_y, card_w, card_h);
     graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_rect(ctx, card_rect, 6, GCornersAll);
+    graphics_fill_rect(ctx, card_rect, 4, GCornersAll);
     graphics_context_set_stroke_color(ctx, GColorYellow);
     graphics_context_set_stroke_width(ctx, 2);
-    graphics_draw_round_rect(ctx, card_rect, 6);
+    graphics_draw_rect(ctx, card_rect);
 
     // Title banner
-    graphics_context_set_text_color(ctx, GColorCeleste);
+    graphics_context_set_text_color(ctx, GColorYellow);
     graphics_draw_text(
         ctx,
         "AGENT PROMPT",
