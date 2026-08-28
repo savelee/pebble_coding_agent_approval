@@ -21,7 +21,7 @@
 static Window *s_main_window;
 static Layer *s_canvas_layer;
 static TextLayer *s_status_layer;
-static char s_status_buffer[32] = "READY";
+static char s_status_buffer[128] = "READY";
 
 /**
  * Send action key to PebbleKit JS via AppMessage dictionary.
@@ -64,14 +64,10 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 }
 
-/**
- * Draw a checkmark inside a bounding box.
- */
 static void draw_checkmark(GContext *ctx, GPoint center, int radius) {
   graphics_context_set_stroke_width(ctx, 3);
   graphics_context_set_stroke_color(ctx, GColorWhite);
 
-  // Checkmark line segments
   GPoint p1 = GPoint(center.x - radius / 2, center.y);
   GPoint p2 = GPoint(center.x - radius / 6, center.y + radius / 3);
   GPoint p3 = GPoint(center.x + radius / 2, center.y - radius / 3);
@@ -80,9 +76,6 @@ static void draw_checkmark(GContext *ctx, GPoint center, int radius) {
   graphics_draw_line(ctx, p2, p3);
 }
 
-/**
- * Draw a cross (X) inside a bounding box.
- */
 static void draw_cross(GContext *ctx, GPoint center, int radius) {
   graphics_context_set_stroke_width(ctx, 3);
   graphics_context_set_stroke_color(ctx, GColorWhite);
@@ -98,12 +91,9 @@ static void draw_cross(GContext *ctx, GPoint center, int radius) {
       GPoint(center.x + offset, center.y - offset));
 }
 
-/**
- * Canvas layer update procedure rendering split screen and icons.
- */
 static void canvas_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
-  int header_height = 22;
+  int header_height = 24;
   int usable_height = bounds.size.h - header_height;
   int half_height = usable_height / 2;
   int top_start_y = header_height;
@@ -114,7 +104,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorKellyGreen);
   graphics_fill_rect(ctx, top_rect, 0, GCornerNone);
 
-  // Circle button for Confirm
   GPoint top_center = GPoint(bounds.size.w / 2, top_start_y + half_height / 2 - 10);
   int circle_radius = 20;
   graphics_context_set_fill_color(ctx, GColorIslamicGreen);
@@ -124,7 +113,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_circle(ctx, top_center, circle_radius);
   draw_checkmark(ctx, top_center, circle_radius);
 
-  // Top Label
   graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(
       ctx,
@@ -140,7 +128,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorRed);
   graphics_fill_rect(ctx, bottom_rect, 0, GCornerNone);
 
-  // Circle button for Disapprove
   GPoint bottom_center = GPoint(bounds.size.w / 2, bottom_start_y + half_height / 2 - 10);
   graphics_context_set_fill_color(ctx, GColorDarkCandyAppleRed);
   graphics_fill_circle(ctx, bottom_center, circle_radius);
@@ -149,7 +136,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_circle(ctx, bottom_center, circle_radius);
   draw_cross(ctx, bottom_center, circle_radius);
 
-  // Bottom Label
   graphics_draw_text(
       ctx,
       "DISAPPROVE [DOWN]",
@@ -176,17 +162,25 @@ void ui_set_status(const char *status_msg) {
   text_layer_set_text(s_status_layer, s_status_buffer);
 }
 
+void ui_set_prompt_text(const char *prompt_msg) {
+  if (!prompt_msg || !s_status_layer) {
+    return;
+  }
+  snprintf(s_status_buffer, sizeof(s_status_buffer), "🔔 %s", prompt_msg);
+  text_layer_set_text(s_status_layer, s_status_buffer);
+  vibes_long_pulse();
+}
+
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  // Create canvas layer for split background & custom graphics
   s_canvas_layer = layer_create(bounds);
   layer_set_update_proc(s_canvas_layer, canvas_update_proc);
   layer_add_child(window_layer, s_canvas_layer);
 
-  // Dedicated Top Status Header Bar (never overlaps button content)
-  int header_height = 22;
+  // Dedicated Top Status Header Bar
+  int header_height = 24;
   s_status_layer = text_layer_create(GRect(0, 0, bounds.size.w, header_height));
   text_layer_set_background_color(s_status_layer, GColorBlack);
   text_layer_set_text_color(s_status_layer, GColorYellow);

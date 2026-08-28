@@ -38,6 +38,10 @@
 #define MESSAGE_KEY_PORT 3
 #endif
 
+#ifndef MESSAGE_KEY_PROMPT_TEXT
+#define MESSAGE_KEY_PROMPT_TEXT 4
+#endif
+
 #define ACTION_CONFIRM 0
 #define ACTION_DISAPPROVE 1
 
@@ -57,3 +61,10 @@ void ui_deinit(void);
  * @param status_msg Null-terminated string indicating current action status.
  */
 void ui_set_status(const char *status_msg);
+
+/**
+ * Display incoming agent notification / prompt message.
+ *
+ * @param prompt_msg Null-terminated string containing the agent answer or question.
+ */
+void ui_set_prompt_text(const char *prompt_msg);

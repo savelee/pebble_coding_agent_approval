@@ -106,6 +106,25 @@ Whenever **Antigravity**, **Claude Code**, or **Cursor** requests permission to 
 > [!IMPORTANT]
 > **Active Chat Focus**: The physical buttons inject simulated keystrings directly into your Mac's active focused window. Ensure your cursor / active focus is on your agent chat or terminal input prompt.
 
+---
+
+### Step 8: Send Agent Answers / Notifications to Your Wrist!
+You can push prompt questions or completion messages from Antigravity, terminal tasks, or scripts straight to your watch:
+
+```bash
+# Send from terminal via Python CLI
+python -m listener.notify "Antigravity plan ready: 3 files to modify. Approve?"
+
+# Or via simple HTTP POST curl
+curl -X POST http://localhost:5000/api/notify \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Antigravity", "body": "Tests passed successfully!"}'
+```
+
+* **On macOS**: Fires a native Notification Center banner (which Bluetooth-forwards to your phone and watch).
+* **On Watchapp**: The watch gives a long haptic buzz (`🔔`) and displays the incoming message on the status bar right above the Confirm/Disapprove buttons!
+
+
 
 ---
 

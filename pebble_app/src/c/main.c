@@ -19,6 +19,14 @@
 #include <pebble.h>
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+  // Check for incoming prompt text notification
+  Tuple *prompt_tuple = dict_find(iterator, MESSAGE_KEY_PROMPT_TEXT);
+  if (prompt_tuple) {
+    ui_set_prompt_text(prompt_tuple->value->cstring);
+    return;
+  }
+
+  // Check for status feedback
   Tuple *status_tuple = dict_find(iterator, MESSAGE_KEY_STATUS);
   if (status_tuple) {
     ui_set_status(status_tuple->value->cstring);
@@ -55,7 +63,7 @@ static void init(void) {
   app_message_register_outbox_failed(outbox_failed_callback);
   app_message_register_outbox_sent(outbox_sent_callback);
 
-  const uint32_t inbox_size = 256;
+  const uint32_t inbox_size = 512;
   const uint32_t outbox_size = 256;
   app_message_open(inbox_size, outbox_size);
 }

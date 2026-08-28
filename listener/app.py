@@ -21,6 +21,7 @@ from flask import Flask, jsonify, request
 
 from listener.config import settings
 from listener.services.keystroke_service import KeystrokeService
+from listener.services.notification_service import NotificationService
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,17 +32,20 @@ logger = logging.getLogger(__name__)
 
 def create_app(
     keystroke_service: Optional[KeystrokeService] = None,
+    notification_service: Optional[NotificationService] = None,
 ) -> Flask:
     """Create and configure the Flask listener application.
 
     Args:
         keystroke_service: Optional injected KeystrokeService instance.
+        notification_service: Optional injected NotificationService instance.
 
     Returns:
         Configured Flask application instance.
     """
     app = Flask(__name__)
     service = keystroke_service or KeystrokeService(target_app=settings.target_app)
+    notif_service = notification_service or NotificationService()
     notifications_queue: List[Dict[str, Any]] = []
 
     @app.route("/healthz", methods=["GET"])
@@ -142,36 +146,57 @@ def create_app(
 
     @app.route("/api/notify", methods=["POST"])
     def handle_notify():
-        """Stage or dispatch notification message for Pebble.
+        """Stage or dispatch notification message for Pebble and system.
 
         Expected JSON payload:
-            {"title": "...", "body": "..."}
+            {"title": "...", "body": "..."} or {"message": "...", "title": "..."}
 
         Returns:
-            JSON response acknowledging notification enqueue.
+            JSON response acknowledging notification enqueue and broadcast.
         """
         data = request.get_json(silent=True)
-        if not data or "title" not in data or "body" not in data:
+        if not data:
             return (
                 jsonify(
                     {
-                        "error": "Notification must include 'title' and 'body'.",
+                        "error": "Missing JSON payload.",
                         "status": "error",
                     }
                 ),
                 400,
             )
 
-        notifications_queue.append(data)
+        body = data.get("body") or data.get("message")
+        title = data.get("title", "Antigravity")
+
+        if not body:
+            return (
+                jsonify(
+                    {
+                        "error": "Notification must include 'body' or 'message'.",
+                        "status": "error",
+                    }
+                ),
+                400,
+            )
+
+        payload = {"title": title, "body": body}
+        notifications_queue.append(payload)
+
+        # Trigger native OS notification (forwards to connected Bluetooth devices)
+        notif_service.show_system_notification(title=title, body=body)
+
         logger.info(
-            "Enqueued notification: %s - %s",
-            data["title"],
-            data["body"],
+            "Dispatched notification: %s - %s",
+            title,
+            body,
         )
         return (
             jsonify(
                 {
                     "status": "enqueued",
+                    "title": title,
+                    "body": body,
                     "total_pending": len(notifications_queue),
                 }
             ),

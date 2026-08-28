@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @fileoverview PebbleKit JS application for Pebble Agent Approvals.
+ * @fileoverview PebbleKit JS application for Pebble Agent Approvals & Notifications.
  */
 
 var messageKeys;
@@ -25,26 +25,19 @@ try {
     STATUS: 'STATUS',
     HOST: 'HOST',
     PORT: 'PORT',
+    PROMPT_TEXT: 'PROMPT_TEXT',
   };
 }
 
 var DEFAULT_HOST = '127.0.0.1';
 var DEFAULT_PORT = '5000';
 
-/**
- * Retrieve the configured host and port from localStorage.
- * @returns {{host: string, port: string}} The server endpoint details.
- */
 function getServerConfig() {
   var host = localStorage.getItem('HOST') || DEFAULT_HOST;
   var port = localStorage.getItem('PORT') || DEFAULT_PORT;
   return { host: host, port: port };
 }
 
-/**
- * Send status string back to Pebble C app.
- * @param {string} statusMsg Status label to display on watch UI.
- */
 function sendStatusToWatch(statusMsg) {
   var statusKey = (messageKeys && typeof messageKeys.STATUS !== 'undefined')
     ? messageKeys.STATUS
@@ -63,10 +56,24 @@ function sendStatusToWatch(statusMsg) {
   );
 }
 
-/**
- * Dispatch HTTP POST request to Python listener.
- * @param {string} action Action string ('confirm' or 'disapprove').
- */
+function sendPromptToWatch(promptText) {
+  var promptKey = (messageKeys && typeof messageKeys.PROMPT_TEXT !== 'undefined')
+    ? messageKeys.PROMPT_TEXT
+    : 'PROMPT_TEXT';
+  var dict = {};
+  dict[promptKey] = promptText;
+
+  Pebble.sendAppMessage(
+    dict,
+    function() {
+      console.log('Successfully pushed prompt to watch: ' + promptText);
+    },
+    function(e) {
+      console.error('Failed to push prompt to watch: ' + JSON.stringify(e));
+    }
+  );
+}
+
 function postActionToListener(action) {
   var config = getServerConfig();
   var url = 'http://' + config.host + ':' + config.port + '/api/action';
@@ -100,9 +107,43 @@ function postActionToListener(action) {
   xhr.send(JSON.stringify({ action: action }));
 }
 
-// Lifecycle listeners
+// Background Notification Poller (Pulls from /api/notifications)
+function pollNotifications() {
+  var config = getServerConfig();
+  var url = 'http://' + config.host + ':' + config.port + '/api/notifications';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.timeout = 3500;
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        var data = JSON.parse(xhr.responseText);
+        if (data.notifications && data.notifications.length > 0) {
+          for (var i = 0; i < data.notifications.length; i++) {
+            var n = data.notifications[i];
+            var msg = n.body || n.message || n.title;
+            if (msg) {
+              sendPromptToWatch(msg);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to parse notifications: ' + err);
+      }
+    }
+  };
+
+  xhr.send();
+}
+
+var pollInterval = null;
 Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS ready for Agent Approvals. Target=' + DEFAULT_HOST + ':' + DEFAULT_PORT);
+  if (!pollInterval) {
+    pollInterval = setInterval(pollNotifications, 4000);
+  }
 });
 
 Pebble.addEventListener('appmessage', function(e) {
@@ -123,7 +164,6 @@ Pebble.addEventListener('appmessage', function(e) {
   }
 });
 
-// Self-contained HTML settings page generator
 function generateConfigHtml() {
   var config = getServerConfig();
   var html = '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
