@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     confirm_text: str = "i confirm"
     disapprove_text: str = "i disapprove"
     auto_enter: bool = True
+    watch_transcript: bool = True
 
     model_config = SettingsConfigDict(
         env_prefix="PEBBLE_",

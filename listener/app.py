@@ -22,6 +22,7 @@ from flask import Flask, jsonify, request
 from listener.config import settings
 from listener.services.keystroke_service import KeystrokeService
 from listener.services.notification_service import NotificationService
+from listener.services.transcript_watcher import TranscriptWatcher
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,12 +34,16 @@ logger = logging.getLogger(__name__)
 def create_app(
     keystroke_service: Optional[KeystrokeService] = None,
     notification_service: Optional[NotificationService] = None,
+    transcript_watcher: Optional[TranscriptWatcher] = None,
+    start_watcher: bool = False,
 ) -> Flask:
     """Create and configure the Flask listener application.
 
     Args:
         keystroke_service: Optional injected KeystrokeService instance.
         notification_service: Optional injected NotificationService instance.
+        transcript_watcher: Optional injected TranscriptWatcher instance.
+        start_watcher: If True, starts the background transcript watcher.
 
     Returns:
         Configured Flask application instance.
@@ -47,6 +52,21 @@ def create_app(
     service = keystroke_service or KeystrokeService(target_app=settings.target_app)
     notif_service = notification_service or NotificationService()
     notifications_queue: List[Dict[str, Any]] = []
+
+    def handle_transcript_notification(title: str, body: str) -> None:
+        payload = {"title": title, "body": body}
+        notifications_queue.append(payload)
+        notif_service.show_system_notification(title=title, body=body)
+
+    watcher = transcript_watcher or (
+        TranscriptWatcher(on_notification=handle_transcript_notification)
+        if (start_watcher or settings.watch_transcript)
+        else None
+    )
+
+    if watcher and (start_watcher or settings.watch_transcript):
+        watcher.start()
+        app.watcher = watcher
 
     @app.route("/healthz", methods=["GET"])
     def health_check():
@@ -61,6 +81,7 @@ def create_app(
                     "status": "ok",
                     "service": "pebble-approvals-listener",
                     "target_app": settings.target_app,
+                    "watching_transcript": bool(watcher and watcher._running),
                 }
             ),
             200,
@@ -217,7 +238,7 @@ def create_app(
     return app
 
 
-app = create_app()
+app = create_app(start_watcher=True)
 
 if __name__ == "__main__":
     app.run(

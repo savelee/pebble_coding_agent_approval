@@ -22,6 +22,8 @@ static Window *s_main_window;
 static Layer *s_canvas_layer;
 static TextLayer *s_status_layer;
 static char s_status_buffer[128] = "READY";
+static char s_prompt_buffer[128] = "";
+static bool s_has_active_prompt = false;
 
 /**
  * Send action key to PebbleKit JS via AppMessage dictionary.
@@ -35,10 +37,14 @@ static void send_action(int action) {
     dict_write_int(iter, MESSAGE_KEY_ACTION, &action, sizeof(int), true);
     app_message_outbox_send();
     vibes_short_pulse();
+    s_has_active_prompt = false;
     if (action == ACTION_CONFIRM) {
       ui_set_status("CONFIRMING...");
     } else {
       ui_set_status("DISAPPROVING...");
+    }
+    if (s_canvas_layer) {
+      layer_mark_dirty(s_canvas_layer);
     }
   } else {
     vibes_double_pulse();
@@ -55,7 +61,16 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  splash_init();
+  if (s_has_active_prompt) {
+    // Dismiss prompt card
+    s_has_active_prompt = false;
+    ui_set_status("READY");
+    if (s_canvas_layer) {
+      layer_mark_dirty(s_canvas_layer);
+    }
+  } else {
+    splash_init();
+  }
 }
 
 static void click_config_provider(void *context) {
@@ -152,6 +167,43 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
       ctx,
       GPoint(0, bottom_start_y),
       GPoint(bounds.size.w, bottom_start_y));
+
+  // 4. Draw Center Agent Notification Card if active
+  if (s_has_active_prompt && strlen(s_prompt_buffer) > 0) {
+    int card_w = bounds.size.w - 16;
+    int card_h = 76;
+    int card_x = 8;
+    int card_y = header_height + (usable_height - card_h) / 2;
+
+    GRect card_rect = GRect(card_x, card_y, card_w, card_h);
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_rect(ctx, card_rect, 6, GCornersAll);
+    graphics_context_set_stroke_color(ctx, GColorYellow);
+    graphics_context_set_stroke_width(ctx, 2);
+    graphics_draw_round_rect(ctx, card_rect, 6);
+
+    // Title banner
+    graphics_context_set_text_color(ctx, GColorCeleste);
+    graphics_draw_text(
+        ctx,
+        "AGENT PROMPT",
+        fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
+        GRect(card_x + 4, card_y + 3, card_w - 8, 14),
+        GTextOverflowModeTrailingEllipsis,
+        GTextAlignmentCenter,
+        NULL);
+
+    // Message body
+    graphics_context_set_text_color(ctx, GColorWhite);
+    graphics_draw_text(
+        ctx,
+        s_prompt_buffer,
+        fonts_get_system_font(FONT_KEY_GOTHIC_14),
+        GRect(card_x + 6, card_y + 20, card_w - 12, card_h - 24),
+        GTextOverflowModeWordWrap,
+        GTextAlignmentCenter,
+        NULL);
+  }
 }
 
 void ui_set_status(const char *status_msg) {
@@ -163,12 +215,16 @@ void ui_set_status(const char *status_msg) {
 }
 
 void ui_set_prompt_text(const char *prompt_msg) {
-  if (!prompt_msg || !s_status_layer) {
+  if (!prompt_msg) {
     return;
   }
-  snprintf(s_status_buffer, sizeof(s_status_buffer), "🔔 %s", prompt_msg);
-  text_layer_set_text(s_status_layer, s_status_buffer);
+  snprintf(s_prompt_buffer, sizeof(s_prompt_buffer), "%s", prompt_msg);
+  s_has_active_prompt = true;
+  ui_set_status("AGENT NOTIFICATION");
   vibes_long_pulse();
+  if (s_canvas_layer) {
+    layer_mark_dirty(s_canvas_layer);
+  }
 }
 
 static void main_window_load(Window *window) {
