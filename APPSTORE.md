@@ -10,23 +10,27 @@ Use the following metadata and image assets when submitting **Agent Approvals** 
 * **Developer Name**: `Lee Boonstra (@savelee)`
 * **Category**: `Tools & Utilities` / `Daily`
 * **Version**: `1.1.0`
-* **Compatibility**: Pebble Time 2, Pebble Time, Pebble Time Steel, Pebble Time Round, Pebble 2 (`emery`, `basalt`, `chalk`, `diorite`)
+* **Compatibility**: Pebble Time 2, Pebble Time, Pebble Time Steel, Pebble Time Round, Pebble 2 (`emery`, `basalt`, `chalk`, `diorite`, `aplite`, `flint`, `gabbro`)
 * **Source Code & Listener Download**: [https://github.com/savelee/pebble_coding_agent_approval](https://github.com/savelee/pebble_coding_agent_approval)
 
 ---
 
-## 🖼️ Store Image Assets (Generated in `/store_assets`)
+## 🖼️ Store Image Assets by Platform (in `/store_assets`)
 
-Upload the corresponding image files to the Rebble Developer Portal:
+Upload the corresponding image files under each platform tab in the Rebble Developer Portal:
 
-| Platform / Slot | File Path | Exact Dimensions | Description |
+| Platform / Slot | File Path | Exact Dimensions | Display Style |
 | :--- | :--- | :---: | :--- |
-| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Antigravity full-color logo, watch mockup & developer branding |
-| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | Antigravity full-color icon with green approve checkmark badge |
-| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | Antigravity full-color icon with green approve checkmark badge |
-| **Emery Screenshot 1 (PT2)** | `store_assets/screenshot_emery_200x228.png` | **200 × 228 px** | Real split-screen layout (`READY`, Confirm [UP], Disapprove [DOWN]) |
-| **Emery Screenshot 2 (PT2)** | `store_assets/screenshot_emery_splash_200x228.png` | **200 × 228 px** | Splash & explanation screen with Antigravity logo |
-| **Emery Screenshot 3 (PT2)** | `store_assets/screenshot_emery_sent_200x228.png` | **200 × 228 px** | Confirmed state (`SENT OK`) |
+| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Official Antigravity full-color logo banner with app copy |
+| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | Antigravity full-color icon with green approve checkmark |
+| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | Antigravity full-color icon with green approve checkmark |
+| **Emery** *(Pebble Time 2)* | `store_assets/screenshot_emery_200x228.png` | **200 × 228 px** | Color 64-color split screen |
+| **Aplite** *(Pebble Classic)* | `store_assets/screenshot_aplite_144x168.png` | **144 × 168 px** | Monochrome 1-bit high-contrast split screen |
+| **Basalt** *(Pebble Time)* | `store_assets/screenshot_basalt_144x168.png` | **144 × 168 px** | Color 64-color split screen |
+| **Chalk** *(Time Round)* | `store_assets/screenshot_chalk_180x180.png` | **180 × 180 px** | Circular round watch face with transparent corners |
+| **Diorite** *(Pebble 2)* | `store_assets/screenshot_diorite_144x168.png` | **144 × 168 px** | Monochrome 1-bit split screen |
+| **Flint** *(Color Prototype)* | `store_assets/screenshot_flint_144x168.png` | **144 × 168 px** | Color split screen |
+| **Gabbro** *(High-Res)* | `store_assets/screenshot_gabbro_260x260.png` | **260 × 260 px** | High-res color split screen |
 
 ---
 
@@ -52,7 +56,7 @@ Whenever your AI assistant prompts you for approval (to execute a terminal comma
 Features:
 • Instant two-color split UI (Kelly Green Confirm / Crimson Red Disapprove)
 • Real-time delivery status header (READY, CONFIRMING, SENT OK, NET ERROR)
-• Branded splash screen on launch with Antigravity logo
+• Branded splash screen on launch with layout preview
 • Haptic vibration feedback for both click dispatch and network acknowledgment
 • In-app configuration page to set your Mac / PC local IP and port
 • Zero cloud dependencies—communicates strictly across your local Wi-Fi network
