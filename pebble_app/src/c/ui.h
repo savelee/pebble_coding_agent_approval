@@ -18,10 +18,6 @@
 
 #include <pebble.h>
 
-#if __has_include("message_keys.auto.h")
-#include "message_keys.auto.h"
-#endif
-
 #ifndef MESSAGE_KEY_ACTION
 #define MESSAGE_KEY_ACTION 0
 #endif
