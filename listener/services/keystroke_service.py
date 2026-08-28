@@ -26,11 +26,11 @@ logger = logging.getLogger(__name__)
 class KeystrokeService:
     """Dispatches synthetic keystroke events into the application window."""
 
-    def __init__(self, target_app: Optional[str] = "Antigravity") -> None:
+    def __init__(self, target_app: Optional[str] = "active") -> None:
         """Initialize KeystrokeService and detect host platform.
 
         Args:
-            target_app: Optional target macOS app name to focus before typing.
+            target_app: Target app name (e.g. 'Cursor', 'Antigravity', 'active').
         """
         self.os_type = platform.system()
         self.target_app = target_app
@@ -91,27 +91,33 @@ class KeystrokeService:
             escaped_text = text.replace("\\", "\\\\").replace('"', '\\"')
             script_lines = []
 
-            # Gracefully activate target app without failing
-            if app_to_target:
+            # Only activate specific application if not set to active/current/none
+            if app_to_target and app_to_target.lower() not in (
+                "active",
+                "current",
+                "none",
+                "",
+            ):
+                # Map shorthand names
+                app_name = app_to_target
+                if app_name.lower() == "terminal":
+                    app_name = "Terminal"
+                elif app_name.lower() == "iterm":
+                    app_name = "iTerm2"
+                elif app_name.lower() == "vscode":
+                    app_name = "Visual Studio Code"
+
                 script_lines.append("try")
-                script_lines.append(
-                    f'    tell application "{app_to_target}" to activate'
-                )
+                script_lines.append(f'    tell application "{app_name}" to activate')
                 script_lines.append("on error")
                 script_lines.append("    try")
                 script_lines.append(
-                    '        tell application "Antigravity IDE" to activate'
+                    f'        tell application "{app_name}.app" to activate'
                 )
                 script_lines.append("    on error")
-                script_lines.append("        try")
-                script_lines.append(
-                    '            tell application "Antigravity" to activate'
-                )
-                script_lines.append("        on error")
-                script_lines.append("        end try")
                 script_lines.append("    end try")
                 script_lines.append("end try")
-                script_lines.append("delay 0.15")
+                script_lines.append("delay 0.1")
 
             script_lines.append(
                 f'tell application "System Events" to keystroke "{escaped_text}"'

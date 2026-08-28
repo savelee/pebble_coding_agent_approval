@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Configuration settings for the Pebble Agent Approvals listener service."""
+"""Configuration settings for Pebble Agent Approvals listener."""
 
 from typing import Optional
 
@@ -20,27 +20,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application configuration settings loaded from environment variables.
-
-    Attributes:
-        host: The IP address or hostname to bind the Flask server.
-        port: The TCP port for incoming Pebble HTTP requests.
-        confirm_text: Text string to inject when confirmation action is received.
-        disapprove_text: Text string to inject when disapproval action is received.
-        auto_enter: Whether to append a newline / Return keystroke after typing.
-        target_app: Optional target application name to focus before typing.
-        debug: Whether to enable debug mode in Flask.
-    """
-
-    model_config = SettingsConfigDict(env_prefix="PEBBLE_")
+    """Application settings loaded from environment variables."""
 
     host: str = "0.0.0.0"
     port: int = 5000
+    debug: bool = False
+    target_app: Optional[str] = "active"
     confirm_text: str = "i confirm"
     disapprove_text: str = "i disapprove"
     auto_enter: bool = True
-    target_app: Optional[str] = "Antigravity"
-    debug: bool = False
+
+    model_config = SettingsConfigDict(
+        env_prefix="PEBBLE_",
+        case_sensitive=False,
+    )
 
 
 settings = Settings()

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @fileoverview PebbleKit JS application for Pebble Agent Approvals & Notifications.
+ * @fileoverview PebbleKit JS application for Pebble Agent Approvals & Target App Selection.
  */
 
 var messageKeys;
@@ -31,11 +31,13 @@ try {
 
 var DEFAULT_HOST = '127.0.0.1';
 var DEFAULT_PORT = '5000';
+var DEFAULT_TARGET_APP = 'active';
 
 function getServerConfig() {
   var host = localStorage.getItem('HOST') || DEFAULT_HOST;
   var port = localStorage.getItem('PORT') || DEFAULT_PORT;
-  return { host: host, port: port };
+  var targetApp = localStorage.getItem('TARGET_APP') || DEFAULT_TARGET_APP;
+  return { host: host, port: port, targetApp: targetApp };
 }
 
 function sendStatusToWatch(statusMsg) {
@@ -77,7 +79,7 @@ function sendPromptToWatch(promptText) {
 function postActionToListener(action) {
   var config = getServerConfig();
   var url = 'http://' + config.host + ':' + config.port + '/api/action';
-  console.log('Sending action: ' + action + ' to ' + url);
+  console.log('Sending action: ' + action + ' to ' + url + ' (target_app: ' + config.targetApp + ')');
 
   var xhr = new XMLHttpRequest();
   xhr.open('POST', url, true);
@@ -104,10 +106,14 @@ function postActionToListener(action) {
     sendStatusToWatch('TIMEOUT');
   };
 
-  xhr.send(JSON.stringify({ action: action }));
+  var payload = {
+    action: action,
+    target_app: config.targetApp
+  };
+  xhr.send(JSON.stringify(payload));
 }
 
-// Background Notification Poller (Pulls from /api/notifications)
+// Background Notification Poller
 function pollNotifications() {
   var config = getServerConfig();
   var url = 'http://' + config.host + ':' + config.port + '/api/notifications';
@@ -140,7 +146,7 @@ function pollNotifications() {
 
 var pollInterval = null;
 Pebble.addEventListener('ready', function() {
-  console.log('PebbleKit JS ready for Agent Approvals. Target=' + DEFAULT_HOST + ':' + DEFAULT_PORT);
+  console.log('PebbleKit JS ready for Agent Approvals.');
   if (!pollInterval) {
     pollInterval = setInterval(pollNotifications, 4000);
   }
@@ -173,14 +179,23 @@ function generateConfigHtml() {
     'h2 { margin-top: 0; color: #1a73e8; font-size: 20px; }' +
     'p.sub { font-size: 13px; color: #444; line-height: 1.4; margin-top: 6px; margin-bottom: 18px; }' +
     'label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-top: 15px; margin-bottom: 5px; }' +
-    'input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; font-family: monospace; }' +
+    'input, select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; font-family: sans-serif; background: white; }' +
+    'input { font-family: monospace; }' +
     'button { width: 100%; margin-top: 25px; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }' +
     'button:active { background: #1557b0; }' +
     '</style></head><body>' +
     '<div class="card">' +
-    '<h2>Agent Approvals</h2>' +
-    '<p class="sub">Approve your coding agent (like Antigravity) from your wrist, with the Pebble Time 2 app (and web extension).</p>' +
+    '<h2>Agent Approvals Settings</h2>' +
+    '<p class="sub">Approve your coding agent (Antigravity, Claude Code, Cursor) from your wrist with physical buttons.</p>' +
     '<form id="settings-form">' +
+    '<label>Target Coding Agent / Window</label>' +
+    '<select id="target_app">' +
+    '  <option value="active"' + (config.targetApp === 'active' ? ' selected' : '') + '>Active Window (No Switch / Default)</option>' +
+    '  <option value="Antigravity"' + (config.targetApp === 'Antigravity' ? ' selected' : '') + '>Antigravity IDE</option>' +
+    '  <option value="Cursor"' + (config.targetApp === 'Cursor' ? ' selected' : '') + '>Cursor</option>' +
+    '  <option value="Terminal"' + (config.targetApp === 'Terminal' ? ' selected' : '') + '>Terminal / iTerm2 (Claude Code)</option>' +
+    '  <option value="Code"' + (config.targetApp === 'Code' ? ' selected' : '') + '>Visual Studio Code</option>' +
+    '</select>' +
     '<label>Listener Host / IP Address</label>' +
     '<input type="text" id="host" value="' + config.host + '" placeholder="127.0.0.1 (emulator) or LAN IP" required>' +
     '<label>Port</label>' +
@@ -192,7 +207,8 @@ function generateConfigHtml() {
     '  e.preventDefault();' +
     '  var hostVal = document.getElementById("host").value.trim();' +
     '  var portVal = document.getElementById("port").value.trim();' +
-    '  var options = { host: hostVal, port: portVal };' +
+    '  var targetAppVal = document.getElementById("target_app").value;' +
+    '  var options = { host: hostVal, port: portVal, target_app: targetAppVal };' +
     '  var locationUri = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));' +
     '  window.location.href = locationUri;' +
     '});' +
@@ -215,7 +231,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
       if (options.port) {
         localStorage.setItem('PORT', options.port);
       }
-      console.log('Saved settings: Host=' + options.host + ', Port=' + options.port);
+      if (options.target_app) {
+        localStorage.setItem('TARGET_APP', options.target_app);
+      }
+      console.log('Saved settings: Host=' + options.host + ', Port=' + options.port + ', Target=' + options.target_app);
       sendStatusToWatch('CFG SAVED');
     } catch (err) {
       console.error('Failed to parse config response: ' + err);
