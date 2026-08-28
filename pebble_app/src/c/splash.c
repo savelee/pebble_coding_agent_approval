@@ -21,13 +21,9 @@
 static Window *s_splash_window;
 static Layer *s_splash_canvas;
 static AppTimer *s_splash_timer = NULL;
-static bool s_has_transitioned = false;
 
 static void transition_to_main(void *data) {
-  if (s_has_transitioned) {
-    return;
-  }
-  s_has_transitioned = true;
+  s_splash_timer = NULL;
   ui_init();
   if (s_splash_window) {
     window_stack_remove(s_splash_window, true);
@@ -69,9 +65,9 @@ static void splash_canvas_update_proc(Layer *layer, GContext *ctx) {
 
   // 3. Miniature Watch Layout Preview Box (Center Graphic)
   int card_w = 64;
-  int card_h = 76;
+  int card_h = 74;
   int card_x = (bounds.size.w - card_w) / 2;
-  int card_y = 28;
+  int card_y = 26;
 
   // Outer bezel frame
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -146,8 +142,8 @@ static void splash_window_load(Window *window) {
   layer_set_update_proc(s_splash_canvas, splash_canvas_update_proc);
   layer_add_child(window_layer, s_splash_canvas);
 
-  // Timer for automatic transition after 3500ms (3.5 seconds)
-  s_splash_timer = app_timer_register(3500, transition_to_main, NULL);
+  // Timer for automatic transition after 4000ms (4 seconds)
+  s_splash_timer = app_timer_register(4000, transition_to_main, NULL);
 }
 
 static void splash_window_unload(Window *window) {
@@ -159,15 +155,16 @@ static void splash_window_unload(Window *window) {
 }
 
 void splash_init(void) {
-  s_has_transitioned = false;
-  s_splash_window = window_create();
-  window_set_click_config_provider(s_splash_window, splash_click_config_provider);
-  window_set_window_handlers(
-      s_splash_window,
-      (WindowHandlers){
-          .load = splash_window_load,
-          .unload = splash_window_unload,
-      });
+  if (!s_splash_window) {
+    s_splash_window = window_create();
+    window_set_click_config_provider(s_splash_window, splash_click_config_provider);
+    window_set_window_handlers(
+        s_splash_window,
+        (WindowHandlers){
+            .load = splash_window_load,
+            .unload = splash_window_unload,
+        });
+  }
   window_stack_push(s_splash_window, true);
 }
 

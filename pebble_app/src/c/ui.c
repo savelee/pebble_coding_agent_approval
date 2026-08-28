@@ -15,6 +15,7 @@
  */
 
 #include "ui.h"
+#include "splash.h"
 #include <pebble.h>
 
 static Window *s_main_window;
@@ -53,9 +54,14 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
   send_action(ACTION_DISAPPROVE);
 }
 
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  splash_init();
+}
+
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 }
 
 /**
@@ -196,17 +202,22 @@ static void main_window_unload(Window *window) {
 }
 
 void ui_init(void) {
-  s_main_window = window_create();
-  window_set_click_config_provider(s_main_window, click_config_provider);
-  window_set_window_handlers(
-      s_main_window,
-      (WindowHandlers){
-          .load = main_window_load,
-          .unload = main_window_unload,
-      });
+  if (!s_main_window) {
+    s_main_window = window_create();
+    window_set_click_config_provider(s_main_window, click_config_provider);
+    window_set_window_handlers(
+        s_main_window,
+        (WindowHandlers){
+            .load = main_window_load,
+            .unload = main_window_unload,
+        });
+  }
   window_stack_push(s_main_window, true);
 }
 
 void ui_deinit(void) {
-  window_destroy(s_main_window);
+  if (s_main_window) {
+    window_destroy(s_main_window);
+    s_main_window = NULL;
+  }
 }
