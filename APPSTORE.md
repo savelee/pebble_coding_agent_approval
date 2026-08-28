@@ -10,21 +10,23 @@ Use the following metadata and image assets when submitting **Agent Approvals** 
 * **Developer Name**: `Lee Boonstra (@savelee)`
 * **Category**: `Tools & Utilities` / `Daily`
 * **Version**: `1.1.0`
-* **Compatibility**: Pebble Time, Pebble Time Steel, Pebble Time 2, Pebble Time Round, Pebble 2 (`basalt`, `emery`, `chalk`, `diorite`)
+* **Compatibility**: Pebble Time 2, Pebble Time, Pebble Time Steel, Pebble Time Round, Pebble 2 (`emery`, `basalt`, `chalk`, `diorite`)
 * **Source Code & Listener Download**: [https://github.com/savelee/pebble_coding_agent_approval](https://github.com/savelee/pebble_coding_agent_approval)
 
 ---
 
 ## 🖼️ Store Image Assets (Generated in `/store_assets`)
 
-Upload the corresponding image files from the **`store_assets/`** directory:
+Upload the corresponding image files to the Rebble Developer Portal:
 
-| Asset Name | File Path | Dimensions | Description |
-| :--- | :--- | :--- | :--- |
-| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Antigravity glowing cyber logo, watch mockup & typography |
-| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | Antigravity emblem with green approve checkmark badge |
-| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | Antigravity emblem with green approve checkmark badge |
-| **Real App Screenshot** | `store_assets/screenshot_180x180.png` | **180 × 180 px** | Real split-screen layout (`READY`, Confirm [UP], Disapprove [DOWN]) |
+| Platform / Slot | File Path | Exact Dimensions | Description |
+| :--- | :--- | :---: | :--- |
+| **Store Header Banner** | `store_assets/banner_720x320.png` | **720 × 320 px** | Antigravity full-color logo, watch mockup & developer branding |
+| **Large App Icon** | `store_assets/icon_144x144.png` | **144 × 144 px** | Antigravity full-color icon with green approve checkmark badge |
+| **Small App Icon** | `store_assets/icon_48x48.png` | **48 × 48 px** | Antigravity full-color icon with green approve checkmark badge |
+| **Emery Screenshot 1 (PT2)** | `store_assets/screenshot_emery_200x228.png` | **200 × 228 px** | Real split-screen layout (`READY`, Confirm [UP], Disapprove [DOWN]) |
+| **Emery Screenshot 2 (PT2)** | `store_assets/screenshot_emery_splash_200x228.png` | **200 × 228 px** | Splash & explanation screen with Antigravity logo |
+| **Emery Screenshot 3 (PT2)** | `store_assets/screenshot_emery_sent_200x228.png` | **200 × 228 px** | Confirmed state (`SENT OK`) |
 
 ---
 
@@ -50,7 +52,7 @@ Whenever your AI assistant prompts you for approval (to execute a terminal comma
 Features:
 • Instant two-color split UI (Kelly Green Confirm / Crimson Red Disapprove)
 • Real-time delivery status header (READY, CONFIRMING, SENT OK, NET ERROR)
-• Branded splash screen on launch with layout preview
+• Branded splash screen on launch with Antigravity logo
 • Haptic vibration feedback for both click dispatch and network acknowledgment
 • In-app configuration page to set your Mac / PC local IP and port
 • Zero cloud dependencies—communicates strictly across your local Wi-Fi network
