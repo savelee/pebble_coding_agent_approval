@@ -89,7 +89,6 @@ function postActionToListener(action) {
 
   xhr.onerror = function() {
     console.error('Network request failed for ' + url);
-    // If user hasn't set custom IP and default failed, try localhost as fallback
     sendStatusToWatch('NET ERROR');
   };
 
@@ -132,15 +131,15 @@ function generateConfigHtml() {
     'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; color: #333; }' +
     '.card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 400px; margin: auto; }' +
     'h2 { margin-top: 0; color: #1a73e8; font-size: 20px; }' +
+    'p.sub { font-size: 13px; color: #444; line-height: 1.4; margin-top: 6px; margin-bottom: 18px; }' +
     'label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-top: 15px; margin-bottom: 5px; }' +
     'input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; font-family: monospace; }' +
     'button { width: 100%; margin-top: 25px; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }' +
     'button:active { background: #1557b0; }' +
-    'p.sub { font-size: 12px; color: #777; margin-top: 4px; }' +
     '</style></head><body>' +
     '<div class="card">' +
-    '<h2>Agent Approvals Settings</h2>' +
-    '<p class="sub">Configure your computer\'s local network address where the Python listener is running.</p>' +
+    '<h2>Agent Approvals</h2>' +
+    '<p class="sub">Approve your coding agent (like Antigravity) from your wrist, with the Pebble Time 2 app (and web extension).</p>' +
     '<form id="settings-form">' +
     '<label>Listener Host / IP Address</label>' +
     '<input type="text" id="host" value="' + config.host + '" placeholder="127.0.0.1 (emulator) or LAN IP" required>' +

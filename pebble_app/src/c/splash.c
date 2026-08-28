@@ -46,81 +46,93 @@ static void splash_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, click_handler);
+  window_single_click_subscribe(BUTTON_ID_BACK, click_handler);
 }
 
 static void splash_canvas_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
 
-  // Background
+  // 1. Background
   graphics_context_set_fill_color(ctx, GColorOxfordBlue);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
-  // Center Badge
-  int center_x = bounds.size.w / 2;
-  int center_y = bounds.size.h / 2 - 20;
-
-  // Outer ring
-  graphics_context_set_stroke_color(ctx, GColorCeleste);
-  graphics_context_set_stroke_width(ctx, 2);
-  graphics_draw_circle(ctx, GPoint(center_x, center_y), 28);
-
-  // Dual color inner icons (Green check on left, Red cross on right)
-  graphics_context_set_fill_color(ctx, GColorKellyGreen);
-  graphics_fill_circle(ctx, GPoint(center_x - 10, center_y), 12);
-  graphics_context_set_fill_color(ctx, GColorRed);
-  graphics_fill_circle(ctx, GPoint(center_x + 10, center_y), 12);
-
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_stroke_width(ctx, 2);
-  // Checkmark in green circle
-  graphics_draw_line(
-      ctx,
-      GPoint(center_x - 14, center_y),
-      GPoint(center_x - 11, center_y + 4));
-  graphics_draw_line(
-      ctx,
-      GPoint(center_x - 11, center_y + 4),
-      GPoint(center_x - 6, center_y - 3));
-
-  // Cross in red circle
-  graphics_draw_line(
-      ctx,
-      GPoint(center_x + 7, center_y - 3),
-      GPoint(center_x + 13, center_y + 3));
-  graphics_draw_line(
-      ctx,
-      GPoint(center_x + 7, center_y + 3),
-      GPoint(center_x + 13, center_y - 3));
-
-  // Title
+  // 2. Title Header
   graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(
       ctx,
       "AGENT APPROVALS",
       fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
-      GRect(0, center_y + 34, bounds.size.w, 22),
+      GRect(0, 4, bounds.size.w, 20),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
 
-  // Subtitle
-  graphics_context_set_text_color(ctx, GColorLightGray);
+  // 3. Miniature Watch Layout Preview Box (Center Graphic)
+  int card_w = 64;
+  int card_h = 76;
+  int card_x = (bounds.size.w - card_w) / 2;
+  int card_y = 28;
+
+  // Outer bezel frame
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_fill_rect(ctx, GRect(card_x - 3, card_y - 3, card_w + 6, card_h + 6), 4, GCornersAll);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_width(ctx, 1);
+  graphics_draw_round_rect(ctx, GRect(card_x - 3, card_y - 3, card_w + 6, card_h + 6), 4);
+
+  // Top half of mini preview (Green with Checkmark)
+  int mini_half_h = card_h / 2;
+  graphics_context_set_fill_color(ctx, GColorKellyGreen);
+  graphics_fill_rect(ctx, GRect(card_x, card_y, card_w, mini_half_h), 0, GCornerNone);
+
+  int mini_top_cx = card_x + card_w / 2;
+  int mini_top_cy = card_y + mini_half_h / 2;
+  graphics_context_set_fill_color(ctx, GColorIslamicGreen);
+  graphics_fill_circle(ctx, GPoint(mini_top_cx, mini_top_cy), 11);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_width(ctx, 1);
+  graphics_draw_circle(ctx, GPoint(mini_top_cx, mini_top_cy), 11);
+  // Checkmark lines
+  graphics_draw_line(ctx, GPoint(mini_top_cx - 5, mini_top_cy), GPoint(mini_top_cx - 2, mini_top_cy + 4));
+  graphics_draw_line(ctx, GPoint(mini_top_cx - 2, mini_top_cy + 4), GPoint(mini_top_cx + 5, mini_top_cy - 3));
+
+  // Bottom half of mini preview (Red with Cross)
+  graphics_context_set_fill_color(ctx, GColorRed);
+  graphics_fill_rect(ctx, GRect(card_x, card_y + mini_half_h, card_w, mini_half_h), 0, GCornerNone);
+
+  int mini_bot_cx = card_x + card_w / 2;
+  int mini_bot_cy = card_y + mini_half_h + mini_half_h / 2;
+  graphics_context_set_fill_color(ctx, GColorDarkCandyAppleRed);
+  graphics_fill_circle(ctx, GPoint(mini_bot_cx, mini_bot_cy), 11);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_width(ctx, 1);
+  graphics_draw_circle(ctx, GPoint(mini_bot_cx, mini_bot_cy), 11);
+  // Cross lines
+  graphics_draw_line(ctx, GPoint(mini_bot_cx - 4, mini_bot_cy - 4), GPoint(mini_bot_cx + 4, mini_bot_cy + 4));
+  graphics_draw_line(ctx, GPoint(mini_bot_cx - 4, mini_bot_cy + 4), GPoint(mini_bot_cx + 4, mini_bot_cy - 4));
+
+  // Divider line
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_draw_line(ctx, GPoint(card_x, card_y + mini_half_h), GPoint(card_x + card_w, card_y + mini_half_h));
+
+  // 4. Detailed Explanation Text
+  graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(
       ctx,
-      "Antigravity",
+      "Approve your coding agent (like Antigravity) from your wrist, with the Pebble Time 2 app (and web extension).",
       fonts_get_system_font(FONT_KEY_GOTHIC_14),
-      GRect(0, center_y + 56, bounds.size.w, 18),
+      GRect(6, card_y + card_h + 4, bounds.size.w - 12, 54),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
 
-  // Author / GitHub footer
+  // 5. Action prompt footer
   graphics_context_set_text_color(ctx, GColorCeleste);
   graphics_draw_text(
       ctx,
-      "github.com/savelee",
+      "Press any button to start",
       fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
-      GRect(0, bounds.size.h - 22, bounds.size.w, 18),
+      GRect(0, bounds.size.h - 18, bounds.size.w, 16),
       GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
@@ -134,8 +146,8 @@ static void splash_window_load(Window *window) {
   layer_set_update_proc(s_splash_canvas, splash_canvas_update_proc);
   layer_add_child(window_layer, s_splash_canvas);
 
-  // Timer for automatic transition after 1500ms
-  s_splash_timer = app_timer_register(1500, transition_to_main, NULL);
+  // Timer for automatic transition after 3500ms (3.5 seconds)
+  s_splash_timer = app_timer_register(3500, transition_to_main, NULL);
 }
 
 static void splash_window_unload(Window *window) {
@@ -162,5 +174,6 @@ void splash_init(void) {
 void splash_deinit(void) {
   if (s_splash_window) {
     window_destroy(s_splash_window);
+    s_splash_window = NULL;
   }
 }
