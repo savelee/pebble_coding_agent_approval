@@ -28,7 +28,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     prompt_tuple = dict_find(iterator, 10004);
   }
 
-  if (prompt_tuple && prompt_tuple->value && prompt_tuple->value->cstring) {
+  if (prompt_tuple) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Received prompt notification: %s", prompt_tuple->value->cstring);
     ui_set_prompt_text(prompt_tuple->value->cstring);
     return;
@@ -43,7 +43,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     status_tuple = dict_find(iterator, 10001);
   }
 
-  if (status_tuple && status_tuple->value && status_tuple->value->cstring) {
+  if (status_tuple) {
     ui_set_status(status_tuple->value->cstring);
     if (strcmp(status_tuple->value->cstring, "SENT OK") == 0) {
       vibes_short_pulse();
