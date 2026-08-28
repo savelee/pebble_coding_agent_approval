@@ -35,13 +35,13 @@ def test_clean_markdown_text():
 
 
 def test_transcript_watcher_summary_extraction():
-    """Verify questions and action prompts take priority over header titles."""
+    """Verify questions and prose results take priority over header titles."""
     watcher = TranscriptWatcher()
 
     assert watcher.extract_summary("") is None
     assert watcher.extract_summary("   \n  \n") is None
 
-    # Question takes priority even when headers precede it
+    # Question takes priority
     response_with_question = (
         "### Proposed Enhancement for Version 1.3\n"
         "Would you like me to update the project [Makefile](file:///) "
@@ -50,16 +50,20 @@ def test_transcript_watcher_summary_extraction():
     extracted = watcher.extract_summary(response_with_question)
     assert extracted.startswith("Would you like me to update the project Makefile")
 
-    # Header extraction fallback when no question exists
-    header_text = "# Initializing Test Suite\nSetting up fixtures."
-    assert watcher.extract_summary(header_text) == "Initializing Test Suite"
-
-    # Generic first line
-    prose_text = "All 28 unit tests have passed successfully!"
-    assert (
-        watcher.extract_summary(prose_text)
-        == "All 28 unit tests have passed successfully!"
+    # Prose result takes priority over headers
+    response_with_result = (
+        "Understood! We will keep the desktop listener lean and headless.\n"
+        "## Flow Verified\n* Checked"
     )
+    extracted_result = watcher.extract_summary(response_with_result)
+    assert (
+        extracted_result
+        == "Understood! We will keep the desktop listener lean and headless."
+    )
+
+    # Header extraction fallback when only headers exist
+    header_text = "# Initializing Test Suite\n"
+    assert watcher.extract_summary(header_text) == "Initializing Test Suite"
 
 
 def test_transcript_watcher_file_polling():
@@ -99,7 +103,7 @@ def test_transcript_watcher_file_polling():
 
         assert len(notifications_received) == 1
         assert notifications_received[0][0] == "Antigravity"
-        assert notifications_received[0][1] == "Test Agent Answer"
+        assert notifications_received[0][1] == "Ready for approval."
 
 
 def test_transcript_watcher_start_stop():

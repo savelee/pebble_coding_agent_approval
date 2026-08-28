@@ -76,7 +76,7 @@ class TranscriptWatcher:
         return max(files, key=os.path.getmtime)
 
     def extract_summary(self, content: str) -> Optional[str]:
-        """Extract a clean, concise summary prioritizing questions and actions.
+        """Extract a clean summary prioritizing questions, actions, and prose results.
 
         Args:
             content: Raw string content from planner response.
@@ -112,18 +112,24 @@ class TranscriptWatcher:
                     if len(cleaned) > 10:
                         return cleaned[:180]
 
-        # Priority 3: First meaningful header
+        # Priority 3: First meaningful prose / result / answer sentence
+        for line in lines:
+            if (
+                not line.startswith("#")
+                and not line.startswith("*")
+                and not line.startswith("-")
+                and not line.startswith(">")
+            ):
+                cleaned = clean_markdown_text(line)
+                if len(cleaned) > 8:
+                    return cleaned[:180]
+
+        # Priority 4: First meaningful header (fallback)
         for line in lines:
             if line.startswith("#"):
                 cleaned = clean_markdown_text(line)
                 if cleaned:
                     return cleaned[:180]
-
-        # Priority 4: First non-empty prose line
-        for line in lines:
-            cleaned = clean_markdown_text(line)
-            if len(cleaned) > 8:
-                return cleaned[:180]
 
         return None
 
