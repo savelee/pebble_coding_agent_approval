@@ -19,16 +19,31 @@
 #include <pebble.h>
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  // Check for incoming prompt text notification
+  // Check for incoming prompt text notification (support auto key and fallbacks)
   Tuple *prompt_tuple = dict_find(iterator, MESSAGE_KEY_PROMPT_TEXT);
-  if (prompt_tuple) {
+  if (!prompt_tuple) {
+    prompt_tuple = dict_find(iterator, 4);
+  }
+  if (!prompt_tuple) {
+    prompt_tuple = dict_find(iterator, 10004);
+  }
+
+  if (prompt_tuple && prompt_tuple->value && prompt_tuple->value->cstring) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "Received prompt notification: %s", prompt_tuple->value->cstring);
     ui_set_prompt_text(prompt_tuple->value->cstring);
     return;
   }
 
   // Check for status feedback
   Tuple *status_tuple = dict_find(iterator, MESSAGE_KEY_STATUS);
-  if (status_tuple) {
+  if (!status_tuple) {
+    status_tuple = dict_find(iterator, 1);
+  }
+  if (!status_tuple) {
+    status_tuple = dict_find(iterator, 10001);
+  }
+
+  if (status_tuple && status_tuple->value && status_tuple->value->cstring) {
     ui_set_status(status_tuple->value->cstring);
     if (strcmp(status_tuple->value->cstring, "SENT OK") == 0) {
       vibes_short_pulse();

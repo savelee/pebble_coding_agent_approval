@@ -21,11 +21,11 @@ try {
   messageKeys = require('message_keys');
 } catch (e) {
   messageKeys = {
-    ACTION: 'ACTION',
-    STATUS: 'STATUS',
-    HOST: 'HOST',
-    PORT: 'PORT',
-    PROMPT_TEXT: 'PROMPT_TEXT',
+    ACTION: 0,
+    STATUS: 1,
+    HOST: 2,
+    PORT: 3,
+    PROMPT_TEXT: 4,
   };
 }
 
@@ -43,9 +43,11 @@ function getServerConfig() {
 function sendStatusToWatch(statusMsg) {
   var statusKey = (messageKeys && typeof messageKeys.STATUS !== 'undefined')
     ? messageKeys.STATUS
-    : 'STATUS';
+    : 1;
   var dict = {};
   dict[statusKey] = statusMsg;
+  dict[1] = statusMsg;
+  dict[10001] = statusMsg;
 
   Pebble.sendAppMessage(
     dict,
@@ -61,9 +63,13 @@ function sendStatusToWatch(statusMsg) {
 function sendPromptToWatch(promptText) {
   var promptKey = (messageKeys && typeof messageKeys.PROMPT_TEXT !== 'undefined')
     ? messageKeys.PROMPT_TEXT
-    : 'PROMPT_TEXT';
+    : 4;
   var dict = {};
   dict[promptKey] = promptText;
+  dict[4] = promptText;
+  dict[10004] = promptText;
+
+  console.log('Pushing prompt to watch with payload: ' + JSON.stringify(dict));
 
   Pebble.sendAppMessage(
     dict,
@@ -113,14 +119,14 @@ function postActionToListener(action) {
   xhr.send(JSON.stringify(payload));
 }
 
-// Background Notification Poller
+// Background Notification Poller (Pulls from /api/notifications every 2.5 seconds)
 function pollNotifications() {
   var config = getServerConfig();
   var url = 'http://' + config.host + ':' + config.port + '/api/notifications';
 
   var xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
-  xhr.timeout = 3500;
+  xhr.timeout = 2000;
 
   xhr.onload = function() {
     if (xhr.status === 200) {
@@ -131,6 +137,7 @@ function pollNotifications() {
             var n = data.notifications[i];
             var msg = n.body || n.message || n.title;
             if (msg) {
+              console.log('Fetched notification from listener: ' + msg);
               sendPromptToWatch(msg);
             }
           }
@@ -146,9 +153,10 @@ function pollNotifications() {
 
 var pollInterval = null;
 Pebble.addEventListener('ready', function() {
-  console.log('PebbleKit JS ready for Agent Approvals.');
+  console.log('PebbleKit JS ready for Agent Approvals & Notifications.');
   if (!pollInterval) {
-    pollInterval = setInterval(pollNotifications, 4000);
+    pollNotifications();
+    pollInterval = setInterval(pollNotifications, 2500);
   }
 });
 
@@ -158,11 +166,11 @@ Pebble.addEventListener('appmessage', function(e) {
 
   var actionKey = (messageKeys && typeof messageKeys.ACTION !== 'undefined')
     ? messageKeys.ACTION
-    : 'ACTION';
+    : 0;
 
   var actionVal = typeof dict[actionKey] !== 'undefined'
     ? dict[actionKey]
-    : (typeof dict.ACTION !== 'undefined' ? dict.ACTION : dict[0]);
+    : (typeof dict[0] !== 'undefined' ? dict[0] : (typeof dict[10000] !== 'undefined' ? dict[10000] : dict.ACTION));
 
   if (typeof actionVal !== 'undefined') {
     var actionStr = (actionVal === 0 || actionVal === '0') ? 'confirm' : 'disapprove';
